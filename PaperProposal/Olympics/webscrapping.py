@@ -13,8 +13,9 @@ TODOs
 1) Parse the 'EventScore' into the 10 events after getting web data
 2) Consider removing the venue city location. Leave country.
 3) Create a 'for' loop to process ALL pages
-4) Functionalize the code in 'webscrapping.py'
-5) Repeat steps for the women's heptathlon 
+p1) Functionalize the code in 'webscrapping.py'
+p2) Repeat steps for the women's heptathlon 
+p3) Repeat for given data about athletes
 '''
 
 
@@ -46,6 +47,7 @@ webpages = [
 
 ########
 
+# TODO - 3)
 # Collect table information from the website
 page = requests.get(webpages[0])
 html_src = page.content
