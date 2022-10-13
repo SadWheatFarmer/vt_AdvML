@@ -101,10 +101,25 @@ for ext in results_urls:
 
     # Set the dataframe header for the specific Olympic games
     header = []
+    points_flag = True
+    used_cols = []
+    counter = 0
     for col in table_participants.find_all('th'):
-        header.append(col.text)
-        # TODO - consider only using the 1st 'point' column
-        # TODO - consider not including blank '' columns
+        # Only using the 1st 'point' column
+        # Don't include the blank columns for MEDAL, WR/OR, or references
+        if "Points" in col.text and points_flag:
+            header.append(col.text)
+            points_flag = False
+            used_cols.append(counter)
+            counter += counter + 1
+        elif "Points" not in col.text:
+            header.append(col.text)
+            used_cols.append(counter)
+            counter += counter + 1
+
+
+        if "1,500 metres" in col.text:
+            break
 
     # Extract all data from the Olympic games
     tbody = table_participants.find_all('tr')
