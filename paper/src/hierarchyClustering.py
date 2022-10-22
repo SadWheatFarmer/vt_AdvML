@@ -24,43 +24,16 @@ def normalizeData(np_array):
 
     return x_normalized
 
-def modifyData(df: pd.DataFrame, YEARS: list, REQ_GAMES, REQ_MIN) -> \
-        pd.DataFrame:
-    '''
-    :param df:
-    :return:
+def modifyDataForModel(df: pd.DataFrame) -> pd.DataFrame:
 
-    Edit the dataset in the following ways
-    1) Remove features not needed for model
-    2) Apply filters
-        Player must have played in specific years: years = { firstYear, SecondYear }
-        Player must have played in at least x games.
-        Player must have played at least y minutes per game played.
-    '''
-
-    # Rename the used ID feature to ID
-    df = df.rename(columns={"Unnamed: 0" : "ID"})
+    # Add the extra id column. BUG
+    df = df.drop(columns='Unnamed: 0')
 
     # Remove Features
-    REMOVE_FEATURES = ['ID', 'blanl', 'blank2', 'Player', 'Tm', 'Pos']
+    REMOVE_FEATURES = ['Player', 'Tm', 'Pos']
     df = df.drop(columns=REMOVE_FEATURES)
 
-    # 1) Year filter
-    df = df[(df['Year'] >= YEARS[0]) & (df['Year'] <= YEARS[1])]
-
-    # 2) Game filter
-    df = df[(df['G'] >= REQ_GAMES)]
-
-    # 3) Time filter
-    df = df[(df['MP'] >= REQ_GAMES * REQ_MIN)]
-
-
-    # Substitute NAN values with 0 (for now) #TODO - What to do about NAN.
-    df = df.replace(np.nan, 0)
-
-
     return df
-
 
 
 def hierarchicalClustering(df: pd.DataFrame, years: list) -> bool:
@@ -77,26 +50,29 @@ def hierarchicalClustering(df: pd.DataFrame, years: list) -> bool:
                                 get_leaves=True
                                 )
 
+    plt.title('Separation of NBA Players {}-{}'.format(years[0], years[1]))
+    plt.show()
+
     # k_means = KMeans(n_clusters=5, max_iter=50, random_state=20)
     # k_means.fit(df)
     # plt.figure(figsize=(8,8))
     # plt.title('Separation of NBA Players {}-{}'.format(years[0], years[1]))
     # plt.show()
 
+
     return True
 
 
 ##################################
 
-DATA_PATH = "../data/Seasons_Stats.csv"
+YEARS = [2000, 2009]
+DATA_PATH = "../data/Season_Stats_{}-{}.csv".format(YEARS[0], YEARS[1])
 df_data = pd.read_csv(DATA_PATH)
 
-YEARS = [2000, 2009]
-REQ_GAMES = 20
-REQ_MIN = 10
-df_data = modifyData(df_data, YEARS, REQ_GAMES, REQ_MIN)
-print("Data Modification: COMPLETE")
+df_data = modifyDataForModel(df_data)
+print("Data for Model Modifcation: COMPLETE")
 
 if hierarchicalClustering(df_data, YEARS):
     print("Model1 (Divisive Clustering): COMPLETE")
+
 

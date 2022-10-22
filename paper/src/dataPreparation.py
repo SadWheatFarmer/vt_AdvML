@@ -14,7 +14,47 @@
 OUTPUT_FILES = True
 
 import pandas as pd
+import numpy as np
 
+##############################
+
+def modifyData(df: pd.DataFrame, YEARS: list, REQ_GAMES, REQ_MIN) -> \
+        pd.DataFrame:
+    '''
+        :param df:
+        :return:
+
+        Edit the dataset in the following ways
+        1) Remove features not needed for model
+        2) Apply filters
+            Player must have played in specific years: years = { firstYear, SecondYear }
+            Player must have played in at least x games.
+            Player must have played at least y minutes per game played.
+        '''
+
+    # Add a name to the used ID feature to use as the dataframe index
+    df = df.rename(columns={'Unnamed: 0': "ID"})
+
+    # Remove Features
+    REMOVE_FEATURES = ['blanl', 'blank2']
+    df = df.drop(columns=REMOVE_FEATURES)
+
+    # 1) Year filter
+    df = df[(df['Year'] >= YEARS[0]) & (df['Year'] <= YEARS[1])]
+
+    # 2) Game filter
+    df = df[(df['G'] >= REQ_GAMES)]
+
+    # 3) Time filter
+    df = df[(df['MP'] >= REQ_GAMES * REQ_MIN)]
+
+    # Substitute NAN values with 0 (for now) #TODO - What to do about NAN.
+    df = df.replace(np.nan, 0)
+
+    return df
+
+##############################
+##############################
 ##############################
 # Load dataset
 
@@ -23,21 +63,12 @@ DATA_PATH = "../data/Seasons_Stats.csv"
 df_season = pd.read_csv(DATA_PATH)
 
 ##############################
-# Clean data based on visual observation
-
-# 1) Remove 'blank' columns  {blanl, blank2}
-df_season = df_season.drop(columns={'blanl', 'blank2'})
-
-# 2) Remove 'id' column  {'Unnamed: 0'}
-df_season = df_season.drop(columns={'Unnamed: 0'})
-
-##############################
-# Output a Data Quality Report for analysis
+# Output an initial Data Quality Report on the RAW data
 
 from vt_ApplicationsOfML.Libraries.DataExploration.DataQualityReport import DataQualityReport
 
 OUTPUT_PATH = "../data/dqr_ALL_Season_Stats.csv"
-NON_NUMERIC_COLUMNS = ['Player', 'Tm', 'Pos', 'Unnamed: 0']
+NON_NUMERIC_COLUMNS = ['Unnamed: 0', 'Player', 'Tm', 'Pos', 'blanl', 'blank2']
 
 report_all = DataQualityReport()
 report_all.quickDQR(df_season, df_season.columns, NON_NUMERIC_COLUMNS)
@@ -46,37 +77,28 @@ if OUTPUT_FILES:
     report_all.to_csv(OUTPUT_PATH)
 
 ##############################
-    #####################
-##############################
+# Pre-process the data
 
-##############################
-# Modify data based on specified conditions
-#   1) Player must have played in the following years: 2000 - 2009.
-#   2) Player must have played in at least 20 games.
-#   3) Player must have played at least 10 minutes per game played.
-##############################
-
-# 1) Year filter
-df_season = df_season[(df_season['Year'] >= 2000) & (df_season['Year'] < 2010)]
-
-# 2) Game filter
-df_season = df_season[(df_season['G'] >= 20)]
-
-# 3) Time filter
-df_season = df_season[(df_season['MP'] >= 20*10)]
+YEARS = [2000, 2009]
+REQ_GAMES = 20
+REQ_MIN = 10
+df_season = modifyData(df_season, YEARS, REQ_GAMES, REQ_MIN)
+print("Data Modification: COMPLETE")
 
 
 ##############################
-# Output a Data Quality Report for filtered data
+# Output a Data Quality Report for pre-processed data
 
-OUTPUT_PATH = "../data/dqr_FILTERED_Season_Stats.csv"
-NON_NUMERIC_COLUMNS = ['Player', 'Tm', 'Pos', 'Unnamed: 0']
+OUTPUT_PATH_DQR = "../data/dqr_FILTERED_Season_Stats_{}-{}.csv".format(YEARS[0], YEARS[1])
+OUTPUT_PATH_DATA = "../data/Season_Stats_{}-{}.csv".format(YEARS[0], YEARS[1])
+NON_NUMERIC_COLUMNS = ['Player', 'Tm', 'Pos']
 
 report = DataQualityReport()
 report.quickDQR(df_season, df_season.columns, NON_NUMERIC_COLUMNS)
 
 if OUTPUT_FILES:
-    report.to_csv(OUTPUT_PATH)
+    report.to_csv(OUTPUT_PATH_DQR)
+    df_season.to_csv(OUTPUT_PATH_DATA)
 
 '''
 NOTES - Filtered players data
