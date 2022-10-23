@@ -32,6 +32,9 @@ def modifyData(df: pd.DataFrame, YEARS: list, REQ_GAMES, REQ_MIN) -> \
             Player must have played at least y minutes per game played.
         '''
 
+    ##########################
+    # Feature Cleanup
+
     # Add a name to the used ID feature to use as the dataframe index
     df = df.rename(columns={'Unnamed: 0': "ID"})
 
@@ -39,17 +42,27 @@ def modifyData(df: pd.DataFrame, YEARS: list, REQ_GAMES, REQ_MIN) -> \
     REMOVE_FEATURES = ['blanl', 'blank2']
     df = df.drop(columns=REMOVE_FEATURES)
 
+    # Remove all player names of 'nan'
+    df = df[~pd.isna(df['Player'])]
+
+    # Set all missing GS values to 0. (this is not a required field)
+    df['GS'] = df['GS'].replace(np.nan, 0)
+
+    # The number of NAN 3PA and NAN FTA equal the number of 0 3PA and FTA.
+    # Therefore, replace all NAN values with zero to pervent a divide-by-zero
+    df['3P%'] = df['3P%'].replace(np.nan, 0)
+    df['FT%'] = df['FT%'].replace(np.nan, 0)
+
+    ##########################
+    # Player Filters
+
     # 1) Year filter
     df = df[(df['Year'] >= YEARS[0]) & (df['Year'] <= YEARS[1])]
-
     # 2) Game filter
     df = df[(df['G'] >= REQ_GAMES)]
-
     # 3) Time filter
     df = df[(df['MP'] >= REQ_GAMES * REQ_MIN)]
 
-    # Substitute NAN values with 0 (for now) #TODO - What to do about NAN.
-    df = df.replace(np.nan, 0)
 
     return df
 

@@ -6,6 +6,9 @@
 #   Description:
 #       Hierarchical Clustering model to analyze NBA positions.
 #
+#   Reference
+#       Dendrograms: https://wheatoncollege.edu/wp-content/uploads/2012/08/How-to-Read-a-Dendrogram-Web-Ready.pdf
+#       Hierarchical Clustering: https://joernhees.de/blog/2015/08/26/scipy-hierarchical-clustering-and-dendrogram-tutorial/
 ## Control flags and constants
 ################################################################################
 import matplotlib.pyplot as plt
@@ -42,16 +45,46 @@ def hierarchicalClustering(df: pd.DataFrame, years: list) -> bool:
     # see documentation for different cluster methodologies
     # { single, complete, average, weighted, centroid, median, ward }
     # https://docs.scipy.org/doc/scipy/reference/generated/scipy.cluster.hierarchy.linkage.html
-    dendrogram = shc.dendrogram((shc.linkage(x,
-                                             method='ward',
-                                             optimal_ordering=False
-                                             )),
-                                truncate_mode='level', p=4,
-                                get_leaves=True
-                                )
+    Z = shc.linkage( x,
+                     method='ward',
+                     optimal_ordering=False
+                     )
+
+    # For a specific 't' number of clusters, get a 1D vector of size=(
+    # #dataPts) showing which cluster each dataPt is in. Add the cluster
+    # label to the dataset.
+    labels = shc.fcluster(Z, criterion='maxclust', t=5)
+    df['Cluster'] = labels
+
+    ##
+    # Create a visual dendrogram for the linkage data.
+
+    #TODO - Understand how distance plays into dendrograms. How to determine
+    # the cutoff?
+
+    dn = shc.dendrogram(Z,
+                        truncate_mode='level', p=3,
+                        get_leaves=True
+                        )
 
     plt.title('Separation of NBA Players {}-{}'.format(years[0], years[1]))
     plt.show()
+
+    # print("Dendrogram Keys = {}".format(dn.keys()))
+    # print("Dendrogram icoord = {}".format(dn.get('icoord')))
+    # print("Dendrogram dcoord = {}".format(dn.get('dcoord')))
+    # print("Dendrogram leaves = {}".format(dn.get('leaves')))
+    # print("Dendrogram ivl = {}".format(dn.get('ivl')))
+
+    # TODO - Understand Cophenet
+    # metric that in theory measures how well a dendrogram preserves the
+    # original clustering.
+    from scipy.cluster.hierarchy import cophenet
+    from scipy.spatial.distance import pdist
+
+    c, coph_dists = cophenet(Z, pdist(x))
+    print("Cophenetic Correlation Coefficient: {}".format(c))
+
 
     # k_means = KMeans(n_clusters=5, max_iter=50, random_state=20)
     # k_means.fit(df)
