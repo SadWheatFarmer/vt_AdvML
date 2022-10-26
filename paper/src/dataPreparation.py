@@ -66,14 +66,35 @@ def modifyData(df: pd.DataFrame, YEARS: list, REQ_GAMES, REQ_MIN) -> \
 
     return df
 
+
+def combineData(df_player: pd.DataFrame, df_stats: pd.DataFrame) -> \
+        pd.DataFrame:
+
+    # Drop some of the player features
+    RETAINED_FEATURES = ['Player', 'height', 'weight']
+    df_player = df_player[RETAINED_FEATURES]
+
+    df_stats = df_stats.join(df_player.set_index('Player'), on='Player')
+
+    df_stats.insert(3, 'height', df_stats.pop('height'))
+    df_stats.insert(4, 'weight', df_stats.pop('weight'))
+    df_stats.insert(5, 'Age', df_stats.pop('Age'))
+
+    return df_stats
+
+
 ##############################
 ##############################
 ##############################
 # Load dataset
 
+PLAYER_PATH = "../data/Players.csv"
 DATA_PATH = "../data/Seasons_Stats.csv"
 
-df_season = pd.read_csv(DATA_PATH)
+df_players = pd.read_csv(PLAYER_PATH)
+df_stats = pd.read_csv(DATA_PATH)
+
+df_data = combineData(df_players, df_stats)
 
 ##############################
 # Output an initial Data Quality Report on the RAW data
@@ -84,7 +105,7 @@ OUTPUT_PATH = "../data/dqr_ALL_Season_Stats.csv"
 NON_NUMERIC_COLUMNS = ['Unnamed: 0', 'Player', 'Tm', 'Pos', 'blanl', 'blank2']
 
 report_all = DataQualityReport()
-report_all.quickDQR(df_season, df_season.columns, NON_NUMERIC_COLUMNS)
+report_all.quickDQR(df_data, df_data.columns, NON_NUMERIC_COLUMNS)
 
 if OUTPUT_FILES:
     report_all.to_csv(OUTPUT_PATH)
@@ -92,10 +113,10 @@ if OUTPUT_FILES:
 ##############################
 # Pre-process the data
 
-YEARS = [2000, 2009]
+YEARS = [1950, 2009]
 REQ_GAMES = 20
 REQ_MIN = 10
-df_season = modifyData(df_season, YEARS, REQ_GAMES, REQ_MIN)
+df_data = modifyData(df_data, YEARS, REQ_GAMES, REQ_MIN)
 print("Data Modification: COMPLETE")
 
 
@@ -107,11 +128,11 @@ OUTPUT_PATH_DATA = "../data/Season_Stats_{}-{}.csv".format(YEARS[0], YEARS[1])
 NON_NUMERIC_COLUMNS = ['Player', 'Tm', 'Pos']
 
 report = DataQualityReport()
-report.quickDQR(df_season, df_season.columns, NON_NUMERIC_COLUMNS)
+report.quickDQR(df_data, df_data.columns, NON_NUMERIC_COLUMNS)
 
 if OUTPUT_FILES:
     report.to_csv(OUTPUT_PATH_DQR)
-    df_season.to_csv(OUTPUT_PATH_DATA)
+    df_data.to_csv(OUTPUT_PATH_DATA)
 
 '''
 NOTES - Filtered players data
