@@ -72,7 +72,6 @@ def modifyData(df: pd.DataFrame, YEARS: list, REQ_GAMES, REQ_MIN) -> \
     df_oneHot_pos['ID'] = df['ID']
 
     df = pd.merge(df, df_oneHot_pos, how='left', on='ID')
-    df = df.drop(columns='Pos')
 
 
     ##########################
@@ -135,7 +134,7 @@ if OUTPUT_FILES:
 ##############################
 # Pre-process the data
 
-YEARS = [1950, 2009]
+YEARS = [2000, 2009]
 REQ_GAMES = 20
 REQ_MIN = 10
 df_data = modifyData(df_data, YEARS, REQ_GAMES, REQ_MIN)

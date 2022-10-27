@@ -40,7 +40,9 @@ def modifyDataForModel(df: pd.DataFrame) -> pd.DataFrame:
 
 
 def hierarchicalClustering(df: pd.DataFrame, years: list) -> bool:
-    x = normalizeData(df.to_numpy())
+    df_data = modifyDataForModel(df)
+    x = normalizeData(df_data.to_numpy())
+    print("Data for Model Modifcation: COMPLETE")
 
     # see documentation for different cluster methodologies
     # { single, complete, average, weighted, centroid, median, ward }
@@ -50,18 +52,29 @@ def hierarchicalClustering(df: pd.DataFrame, years: list) -> bool:
                      optimal_ordering=False
                      )
 
+
+    # Documentation of .cut_tree vs .fcluster (I think .fcluster is the way
+    # to go.
+    # https://docs.scipy.org/doc/scipy/reference/cluster.hierarchy.html
+    numClusters = 5
+    clusters = shc.cut_tree(Z, n_clusters=numClusters)
+
     # For a specific 't' number of clusters, get a 1D vector of size=(
     # #dataPts) showing which cluster each dataPt is in. Add the cluster
     # label to the dataset.
-    labels = shc.fcluster(Z, criterion='maxclust', t=5)
+    labels = shc.fcluster(Z, criterion='maxclust', t=numClusters)
     df['Cluster'] = labels
 
     ##
     # Create a visual dendrogram for the linkage data.
+    # NOTE:
+    #   Height between U's in a dendrogram
+    #   - The distance b/w each horizontal line represents the
+    #   'euclidean'/'manhatten' distance between the 'center'/'closest
+    #   point'/'average' of the nearest cluster. Bigger distance means bigger
+    #   differentiator of cluster.
 
-    #TODO - Understand how distance plays into dendrograms. How to determine
-    # the cutoff?
-
+    # Dendrogram should be cut at 17.1 to have 5 clusters
     dn = shc.dendrogram(Z,
                         truncate_mode='level', p=3,
                         get_leaves=True
@@ -86,12 +99,45 @@ def hierarchicalClustering(df: pd.DataFrame, years: list) -> bool:
     print("Cophenetic Correlation Coefficient: {}".format(c))
 
 
-    # k_means = KMeans(n_clusters=5, max_iter=50, random_state=20)
-    # k_means.fit(df)
-    # plt.figure(figsize=(8,8))
-    # plt.title('Separation of NBA Players {}-{}'.format(years[0], years[1]))
-    # plt.show()
 
+    # Isolate positions per player in the clusters
+    df_cluster = df[['ID', 'Year', 'Player', 'Pos', 'Cluster']]
+    df_cluster.to_csv("../model/MODEL_Hierarchy_Season_Stats_{}-{}.csv".format(
+        YEARS[0],
+        YEARS[1]))
+
+
+    #TODO - Extract this into a function
+    ####################################
+    # Calculate the position concentration in each cluster.
+    #   Output a file with the resulting concentrations
+    #
+    # Requirements:
+    #   Clusters must be labeled as 1 to x
+    #   Data used must include player Position string from the original data.
+    col = ['Total', 'PG', 'SG', 'SF', 'PF', 'C']
+    df_conc = pd.DataFrame(columns=col)
+
+    for i in range(1, numClusters+1):
+        df_x = df[df['Cluster'] == i]
+        print("Population of Cluster {} = {}".format(i, len(df_x)))
+        count = [len(df_x)]
+
+        for j in col[1:]:
+            print("Population of Cluster {} Position {} = {}".format(
+                i,
+                j,
+                len(df_x[(df_x['Pos'] == j)])
+            ))
+            count.append(len(df_x[(df_x['Pos'] == j)])/count[0])
+
+        df_conc = df_conc.append(
+                        pd.Series(count, index=df_conc.columns),
+                        ignore_index=True)
+
+    df_conc.to_csv("../model/CONC_Hierarchy_Season_Stats_{}-{}.csv".format(
+        YEARS[0],
+        YEARS[1]))
 
     return True
 
@@ -101,9 +147,6 @@ def hierarchicalClustering(df: pd.DataFrame, years: list) -> bool:
 YEARS = [2000, 2009]
 DATA_PATH = "../data/Season_Stats_{}-{}.csv".format(YEARS[0], YEARS[1])
 df_data = pd.read_csv(DATA_PATH)
-
-df_data = modifyDataForModel(df_data)
-print("Data for Model Modifcation: COMPLETE")
 
 if hierarchicalClustering(df_data, YEARS):
     print("Model1 (Divisive Clustering): COMPLETE")
