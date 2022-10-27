@@ -57,15 +57,15 @@ def modifyData(df: pd.DataFrame, YEARS: list, REQ_GAMES, REQ_MIN) -> \
     # Cleanup of the Position feature
 
     # Eliminate multiple positions. Only take the first position before a '-'.
-    for id in range(len(df['Pos'])):
-        pos = df['Pos'].iloc[id]
+    for id in df['ID']:
+        pos = df.loc[id, 'Pos']
         dash_position = pos.find('-')
         if dash_position == -1:
             continue
         elif dash_position == 1:
-            df['Pos'].iloc[id] = pos[:1]
+            df.loc[id, 'Pos'] = pos[:1]
         elif dash_position == 2:
-            df['Pos'].iloc[id] = pos[:2]
+            df.loc[id, 'Pos'] = pos[:2]
 
     # One-Hot Encode the 'Pos' feature
     df_oneHot_pos = pd.get_dummies(df['Pos'], prefix='Pos')
