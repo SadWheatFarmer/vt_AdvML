@@ -54,6 +54,28 @@ def modifyData(df: pd.DataFrame, YEARS: list, REQ_GAMES, REQ_MIN) -> \
     df['FT%'] = df['FT%'].replace(np.nan, 0)
 
     ##########################
+    # Cleanup of the Position feature
+
+    # Eliminate multiple positions. Only take the first position before a '-'.
+    for id in range(len(df['Pos'])):
+        pos = df['Pos'].iloc[id]
+        dash_position = pos.find('-')
+        if dash_position == -1:
+            continue
+        elif dash_position == 1:
+            df['Pos'].iloc[id] = pos[:1]
+        elif dash_position == 2:
+            df['Pos'].iloc[id] = pos[:2]
+
+    # One-Hot Encode the 'Pos' feature
+    df_oneHot_pos = pd.get_dummies(df['Pos'], prefix='Pos')
+    df_oneHot_pos['ID'] = df['ID']
+
+    df = pd.merge(df, df_oneHot_pos, how='left', on='ID')
+    df = df.drop(columns='Pos')
+
+
+    ##########################
     # Player Filters
 
     # 1) Year filter
