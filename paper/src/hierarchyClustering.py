@@ -103,11 +103,14 @@ def hierarchicalClustering(df: pd.DataFrame, years: list) -> bool:
     # Isolate positions per player in the clusters
     df_cluster = df[['ID', 'Year', 'Player', 'Pos', 'Cluster']]
     df_cluster.to_csv("../model/MODEL_Hierarchy_Season_Stats_{}-{}.csv".format(
-        YEARS[0],
-        YEARS[1]))
+        years[0],
+        years[1]))
+
+    return True
 
 
-    #TODO - Extract this into a function
+def calcPositionConc(df: pd.DataFrame, YEARS: list) -> bool:
+    #TODO - (consider flipping rows and columns)
     ####################################
     # Calculate the position concentration in each cluster.
     #   Output a file with the resulting concentrations
@@ -118,7 +121,9 @@ def hierarchicalClustering(df: pd.DataFrame, years: list) -> bool:
     col = ['Total', 'PG', 'SG', 'SF', 'PF', 'C']
     df_conc = pd.DataFrame(columns=col)
 
-    for i in range(1, numClusters+1):
+    # i = cluster #
+    # j = specific position
+    for i in range(1, df['Cluster'].max()+1):
         df_x = df[df['Cluster'] == i]
         print("Population of Cluster {} = {}".format(i, len(df_x)))
         count = [len(df_x)]
@@ -127,9 +132,9 @@ def hierarchicalClustering(df: pd.DataFrame, years: list) -> bool:
             print("Population of Cluster {} Position {} = {}".format(
                 i,
                 j,
-                len(df_x[(df_x['Pos'] == j)])
+                round(len(df_x[(df_x['Pos'] == j)]), 3)
             ))
-            count.append(len(df_x[(df_x['Pos'] == j)])/count[0])
+            count.append(round(len(df_x[(df_x['Pos'] == j)])/count[0], 3))
 
         df_conc = df_conc.append(
                         pd.Series(count, index=df_conc.columns),
@@ -141,14 +146,7 @@ def hierarchicalClustering(df: pd.DataFrame, years: list) -> bool:
 
     return True
 
-
 ##################################
 
-YEARS = [2000, 2009]
-DATA_PATH = "../data/Season_Stats_{}-{}.csv".format(YEARS[0], YEARS[1])
-df_data = pd.read_csv(DATA_PATH)
-
-if hierarchicalClustering(df_data, YEARS):
-    print("Model1 (Divisive Clustering): COMPLETE")
 
 

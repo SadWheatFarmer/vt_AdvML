@@ -45,18 +45,31 @@ def modifyData(df: pd.DataFrame, YEARS: list, REQ_GAMES, REQ_MIN) -> \
     # Remove all player names of 'nan'
     df = df[~pd.isna(df['Player'])]
 
-    # Set all missing GS values to 0. (this is not a required field)
-    df['GS'] = df['GS'].replace(np.nan, 0)
+    ##########################
+    # Remove nan features if over a criteria
+    NAN_LIMIT = 0.3
+    for col in df.columns:
+        nanCount = df[col].isnull().sum()
+        if nanCount/len(df[col]) > NAN_LIMIT and\
+                col not in ['GS', '3P', '3PA', '3P%', 'FT%']:
+            print("Delete column {} with "
+                  "{:.2f}% nan values".format(col, nanCount/len(df[col])*100))
+            df = df.drop([col], axis=1)
+        elif nanCount:
+            df[col] = df[col].replace(np.nan, 0)
+        else:
+            continue
 
-    # The number of NAN 3PA and NAN FTA equal the number of 0 3PA and FTA.
-    # Therefore, replace all NAN values with zero to pervent a divide-by-zero
-    df['3P%'] = df['3P%'].replace(np.nan, 0)
-    df['FT%'] = df['FT%'].replace(np.nan, 0)
 
     ##########################
     # Cleanup of the Position feature
 
     # Eliminate multiple positions. Only take the first position before a '-'.
+    # TODO - Decide if to do 3 pos {G, F, C} or 5 {PG, SG, SF, PF, C}
+    #        I think it will be based on the year. Check cardinality of
+    #        'position' feature. IDEA: Always convert down.
+    #        If over 5, then convert to 3.
+    #        If 4, then convert to 3
     for id in df['ID']:
         pos = df.loc[id, 'Pos']
         dash_position = pos.find('-')
@@ -134,9 +147,18 @@ if OUTPUT_FILES:
 ##############################
 # Pre-process the data
 
-YEARS = [2000, 2009]
+YEARS = [2010, 2017]
 REQ_GAMES = 20
 REQ_MIN = 10
+
+# df_year = df_data[(df_data['Year'] >= YEARS[0]) & (df_data['Year'] <= YEARS[1])]
+# report_decade = DataQualityReport()
+# report_decade.quickDQR(df_year, df_year.columns, NON_NUMERIC_COLUMNS)
+#
+# if OUTPUT_FILES:
+#     OUTPUT_PATH_DQR = "../data/dqr_Season_Stats_{}-{}.csv".format(YEARS[0], YEARS[1])
+#     report_decade.to_csv(OUTPUT_PATH_DQR)
+
 df_data = modifyData(df_data, YEARS, REQ_GAMES, REQ_MIN)
 print("Data Modification: COMPLETE")
 
