@@ -151,13 +151,13 @@ YEARS = [2010, 2017]
 REQ_GAMES = 20
 REQ_MIN = 10
 
-# df_year = df_data[(df_data['Year'] >= YEARS[0]) & (df_data['Year'] <= YEARS[1])]
-# report_decade = DataQualityReport()
-# report_decade.quickDQR(df_year, df_year.columns, NON_NUMERIC_COLUMNS)
-#
-# if OUTPUT_FILES:
-#     OUTPUT_PATH_DQR = "../data/dqr_Season_Stats_{}-{}.csv".format(YEARS[0], YEARS[1])
-#     report_decade.to_csv(OUTPUT_PATH_DQR)
+df_year = df_data[(df_data['Year'] >= YEARS[0]) & (df_data['Year'] <= YEARS[1])]
+report_decade = DataQualityReport()
+report_decade.quickDQR(df_year, df_year.columns, NON_NUMERIC_COLUMNS)
+
+if OUTPUT_FILES:
+    OUTPUT_PATH_DQR = "../data/dqr_Season_Stats_{}-{}.csv".format(YEARS[0], YEARS[1])
+    report_decade.to_csv(OUTPUT_PATH_DQR)
 
 df_data = modifyData(df_data, YEARS, REQ_GAMES, REQ_MIN)
 print("Data Modification: COMPLETE")
