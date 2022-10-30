@@ -2,7 +2,7 @@
 #   File:   hierarchyClustering.py
 #   Author: John Smutny
 #   Course: ECE-5424: Advanced Machine Learning
-#   Date:   10/20/2022
+#   Date:   10/30/2022
 #   Description:
 #       Hierarchical Clustering model to analyze NBA positions.
 #
@@ -13,8 +13,6 @@
 ################################################################################
 import matplotlib.pyplot as plt
 import pandas as pd
-import numpy as np
-from sklearn.cluster import AgglomerativeClustering, KMeans
 from sklearn.preprocessing import StandardScaler, normalize
 import scipy.cluster.hierarchy as shc
 
@@ -40,6 +38,8 @@ def modifyDataForModel(df: pd.DataFrame) -> pd.DataFrame:
 
 
 def hierarchicalClustering(df: pd.DataFrame, years: list) -> bool:
+    print("---- Start SVM model ----")
+
     df_data = modifyDataForModel(df)
     x = normalizeData(df_data.to_numpy())
     print("Data for Model Modifcation: COMPLETE")

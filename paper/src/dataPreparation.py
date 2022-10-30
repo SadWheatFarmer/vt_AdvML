@@ -56,7 +56,7 @@ def modifyData(df: pd.DataFrame, YEARS: list, REQ_GAMES, REQ_MIN) -> \
                   "{:.2f}% nan values".format(col, nanCount/len(df[col])*100))
             df = df.drop([col], axis=1)
         elif nanCount:
-            df[col] = df[col].replace(np.nan, 0)
+            df[col] = df[col].replace(np.nan, df[col].median())
         else:
             continue
 
@@ -147,7 +147,7 @@ if OUTPUT_FILES:
 ##############################
 # Pre-process the data
 
-YEARS = [2010, 2017]
+YEARS = [1970, 2017]
 REQ_GAMES = 20
 REQ_MIN = 10
 
