@@ -25,13 +25,21 @@ def normalizeData(np_array):
 
     return x_normalized
 
-def modifyDataForModel(df: pd.DataFrame) -> pd.DataFrame:
+def modifyDataForModel(df: pd.DataFrame, pos) -> pd.DataFrame:
 
     # Add the extra id column. BUG
     df = df.drop(columns='Unnamed: 0')
 
     # Remove Features
-    REMOVE_FEATURES = ['Player', 'Tm', 'Pos']
+    if pos:
+        REMOVE_FEATURES = ['Player', 'Tm', 'Pos']
+        print("Include player POSITION in the model.")
+    else:
+        REMOVE_FEATURES = ['Player', 'Tm', 'Pos',
+                           "Pos_C", "Pos_F", "Pos_G", "Pos_PF",
+                           "Pos_PG", "Pos_SF", 'Pos_SG']
+        print("Remove player POSITION from the model.")
+
     df = df.drop(columns=REMOVE_FEATURES)
 
     return df
@@ -40,9 +48,9 @@ def modifyDataForModel(df: pd.DataFrame) -> pd.DataFrame:
 def hierarchicalClustering(df: pd.DataFrame, years: list) -> bool:
     print("---- Start SVM model ----")
 
-    df_data = modifyDataForModel(df)
+    df_data = modifyDataForModel(df, True)
     x = normalizeData(df_data.to_numpy())
-    print("Data for Model Modifcation: COMPLETE")
+    print("Data for Model Modification: COMPLETE")
 
     # see documentation for different cluster methodologies
     # { single, complete, average, weighted, centroid, median, ward }
@@ -80,14 +88,10 @@ def hierarchicalClustering(df: pd.DataFrame, years: list) -> bool:
                         get_leaves=True
                         )
 
-    plt.title('Separation of NBA Players {}-{}'.format(years[0], years[1]))
-    plt.show()
-
-    # print("Dendrogram Keys = {}".format(dn.keys()))
-    # print("Dendrogram icoord = {}".format(dn.get('icoord')))
-    # print("Dendrogram dcoord = {}".format(dn.get('dcoord')))
-    # print("Dendrogram leaves = {}".format(dn.get('leaves')))
-    # print("Dendrogram ivl = {}".format(dn.get('ivl')))
+    plt.legend('Separation of NBA Players {}-{}'.format(years[0], years[1]))
+    plt.savefig('../model/Hierarchy_Dendrogram_{}-{}'.format(years[0],
+                                                             years[1]))
+    plt.clf()
 
     # TODO - Understand Cophenet
     # metric that in theory measures how well a dendrogram preserves the
@@ -96,9 +100,7 @@ def hierarchicalClustering(df: pd.DataFrame, years: list) -> bool:
     from scipy.spatial.distance import pdist
 
     c, coph_dists = cophenet(Z, pdist(x))
-    print("Cophenetic Correlation Coefficient: {}".format(c))
-
-
+    print("Cophenetic Correlation Coefficient: {:.5f}".format(c))
 
     # Isolate positions per player in the clusters
     df_cluster = df[['ID', 'Year', 'Player', 'Pos', 'Cluster']]
@@ -123,26 +125,41 @@ def calcPositionConc(df: pd.DataFrame, YEARS: list) -> bool:
 
     # i = cluster #
     # j = specific position
+    fig, ax = plt.subplots(nrows=1, ncols=5, squeeze=True)
     for i in range(1, df['Cluster'].max()+1):
         df_x = df[df['Cluster'] == i]
-        print("Population of Cluster {} = {}".format(i, len(df_x)))
         count = [len(df_x)]
 
         for j in col[1:]:
-            print("Population of Cluster {} Position {} = {}".format(
-                i,
-                j,
-                round(len(df_x[(df_x['Pos'] == j)]), 3)
-            ))
             count.append(round(len(df_x[(df_x['Pos'] == j)])/count[0], 3))
 
+        # Publish Pie chart of concentrations
+        # TIP - Use the hyperparameter 'autopct='%.1f'' to print values.
+        # TODO - Do better styling https://www.pythoncharts.com/matplotlib/pie-chart-matplotlib/
+        ax[i-1].set_title("Cluster {}".format(i))
+        if i == 1:
+            ax[i-1].pie(count[1:6], labels=col[1:6], normalize=True)
+        else:
+            ax[i-1].pie(count[1:6], normalize=True)
+
+        # Save the concentrations to publish a .csv
         df_conc = df_conc.append(
                         pd.Series(count, index=df_conc.columns),
                         ignore_index=True)
 
+    # Publish the resulting concentrations
     df_conc.to_csv("../model/CONC_Hierarchy_Season_Stats_{}-{}.csv".format(
         YEARS[0],
         YEARS[1]))
+
+    # Publish resulting PIE charts of the position concentrations
+    fig.legend(title="Position Concentrations {}-{}".format(
+                YEARS[0],
+                YEARS[1]))
+    fig.savefig("../model/PIE_Hierarchy_Season_Stats_{}-{}".format(
+                YEARS[0],
+                YEARS[1]))
+    fig.clf()
 
     return True
 
