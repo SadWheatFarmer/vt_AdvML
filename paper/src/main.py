@@ -3,14 +3,16 @@
 
 
 import hierarchyClustering as hc
+from som import som
 import pandas as pd
 
 ##########################
 ################
 ##########################
 
+DEBUG = False
 HIERARCHICAL = False
-APC = True
+SOM = True
 
 
 YEARS = [[1970, 1979],
@@ -19,10 +21,9 @@ YEARS = [[1970, 1979],
          [2000, 2009],
          [2010, 2017]]
 
-if APC:
-    YEAR = YEARS[0]
-
-
+# YEARS = [[1970, 1979]]
+if DEBUG:
+    YEARS = [YEARS[0]]
 
 for YEAR in YEARS:
     DATA_PATH = "../data/Season_Stats_{}-{}.csv".format(YEAR[0], YEAR[1])
@@ -32,8 +33,15 @@ for YEAR in YEARS:
         if hc.hierarchicalClustering(df_data, [YEAR[0], YEAR[1]]):
             print("Model1 (Divisive Clustering): COMPLETE")
 
-        if hc.calcPositionConc(df_data, [YEAR[0], YEAR[1]]):
+        if hc.calcPositionConc(df_data, 'Hierarchy', [YEAR[0], YEAR[1]]):
             print("Model1 Position Extraction: COMPLETE")
+
+    if SOM:
+        if som(df_data, [YEAR[0], YEAR[1]]):
+            print("Model2 (SOM Clustering): COMPLETE")
+
+        if hc.calcPositionConc(df_data, 'SOM', [YEAR[0], YEAR[1]]):
+            print("Model2 Position Extraction: COMPLETE")
 
 
 

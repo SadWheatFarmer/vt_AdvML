@@ -46,7 +46,7 @@ def modifyDataForModel(df: pd.DataFrame, pos) -> pd.DataFrame:
 
 
 def hierarchicalClustering(df: pd.DataFrame, years: list) -> bool:
-    print("---- Start SVM model ----")
+    print("---- Start Hierarchy Clustering model ----")
 
     df_data = modifyDataForModel(df, True)
     x = normalizeData(df_data.to_numpy())
@@ -111,7 +111,7 @@ def hierarchicalClustering(df: pd.DataFrame, years: list) -> bool:
     return True
 
 
-def calcPositionConc(df: pd.DataFrame, YEARS: list) -> bool:
+def calcPositionConc(df: pd.DataFrame, modelName, YEARS: list) -> bool:
     #TODO - (consider flipping rows and columns)
     ####################################
     # Calculate the position concentration in each cluster.
@@ -148,15 +148,18 @@ def calcPositionConc(df: pd.DataFrame, YEARS: list) -> bool:
                         ignore_index=True)
 
     # Publish the resulting concentrations
-    df_conc.to_csv("../model/CONC_Hierarchy_Season_Stats_{}-{}.csv".format(
+    df_conc.to_csv("../model/CONC_{}_Season_Stats_{}-{}.csv".format(
+        modelName,
         YEARS[0],
         YEARS[1]))
 
     # Publish resulting PIE charts of the position concentrations
+    #TODO - Error with fifth PIE element per chart. Missing data.
     fig.legend(title="Position Concentrations {}-{}".format(
                 YEARS[0],
                 YEARS[1]))
-    fig.savefig("../model/PIE_Hierarchy_Season_Stats_{}-{}".format(
+    fig.savefig("../model/PIE_{}_Season_Stats_{}-{}".format(
+                modelName,
                 YEARS[0],
                 YEARS[1]))
     fig.clf()
