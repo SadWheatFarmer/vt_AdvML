@@ -115,18 +115,23 @@ def calcPositionConc(df: pd.DataFrame, modelName, YEARS: list) -> bool:
     #TODO - (consider flipping rows and columns)
     ####################################
     # Calculate the position concentration in each cluster.
-    #   Output a file with the resulting concentrations
+    #   Output files describing the player position concentrations in each
+    #   cluster. Outputs 1) a .csv with 0-1 percentages of each position in
+    #   each cluster and 2) a .png PIE chart visual of the data in output
+    #   artifact 1).
     #
     # Requirements:
-    #   Clusters must be labeled as 1 to x
-    #   Data used must include player Position string from the original data.
+    #   Clusters must be labeled as 0 to x
+    #   Function assumes that the player's are clustered based on 5 positions.
+
     col = ['Total', 'PG', 'SG', 'SF', 'PF', 'C']
+
     df_conc = pd.DataFrame(columns=col)
 
     # i = cluster #
     # j = specific position
     fig, ax = plt.subplots(nrows=1, ncols=5, squeeze=True)
-    for i in range(1, df['Cluster'].max()+1):
+    for i in range(1, len(col[1:])+1):
         df_x = df[df['Cluster'] == i]
         count = [len(df_x)]
 
@@ -154,7 +159,6 @@ def calcPositionConc(df: pd.DataFrame, modelName, YEARS: list) -> bool:
         YEARS[1]))
 
     # Publish resulting PIE charts of the position concentrations
-    #TODO - Error with fifth PIE element per chart. Missing data.
     fig.legend(title="Position Concentrations {}-{}".format(
                 YEARS[0],
                 YEARS[1]))

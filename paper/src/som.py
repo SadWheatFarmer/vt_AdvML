@@ -58,6 +58,8 @@ def som(df: pd.DataFrame, years: list) -> bool:
     nba_som.fit(x, epochs=1)
     labels = nba_som.predict(x)
 
+    # Ensure that all labels are corrected to be in range [1, 5]
+    labels = labels + 1
     df['Cluster'] = labels
 
     return True
