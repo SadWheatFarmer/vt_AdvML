@@ -43,6 +43,56 @@ import numpy as np
 
 ##############################
 
+def removeDuplicates(df: pd.DataFrame) -> pd.DataFrame:
+    '''
+    Look through data for identically named players in the same year and
+    average their entries statistics so that there is one entry per year per
+    player.
+    There could be multiple entries for one player if that player switches
+    teams over the course of the same year.
+
+    :param df: Input dataframe of the overall data
+    :return: Pandas Dataframe with combined data entries
+    '''
+
+    NON_COLUMNS = ['ID', 'Year', 'Player', 'height', 'weight', 'Age', 'Pos', 'Tm']
+    SUM_COLUMNS = ['G', 'GS', 'MP',  'OWS', 'DWS', 'WS', 'ORB', 'DRB', 'TRB',
+                   'FG', 'FGA', 'AST', 'STL', 'BLK', 'TOV', 'PF', 'PTS', '3P',
+                   '3PA', '2P', '2PA', 'FT', 'FTA']
+    AVG_COLUMNS = ['PER', 'TS%', '3PAr', 'FTr', 'ORB%', 'DRB%', 'TRB%',
+                   'AST%', 'STL%', 'BLK%', 'TOV%', 'USG%', 'WS/48', 'OBPM',
+                   'DBPM', 'BPM', 'VORP', 'FG%', '3P%', '2P%', 'eFG%', 'FT%']
+
+    # loop through all present years. Adjustments are continued in each year.
+    for year in df['Year'].unique():
+        df_oneYear = df[df['Year'] == year]
+        for name in df_oneYear['Player'].unique():
+
+            # Sum data entries if a player's name occurs more than once in a
+            # season.
+            if df_oneYear['Player'].value_counts()[name] > 1:
+                indicies = df_oneYear[df_oneYear['Player'] == name].index
+                refRow = df[df['ID'] == indicies[0]]
+
+                # For each feature, ether SUM or AVG all the data entries.
+                for feature in df.columns:
+                    # Loop through each found player entry.
+                    for i in indicies[1:]:
+                        if feature in SUM_COLUMNS:
+                            refRow[feature] = refRow[feature].iat[0] + \
+                                              df_oneYear[df_oneYear['ID'] ==
+                                                         i][feature].iat[0]
+                        elif feature in AVG_COLUMNS:
+                            print("do something")
+                        else:
+                            break
+            # If there is only one player data entry, do not do anything.
+            else:
+                continue
+
+
+
+
 def modifyData(df: pd.DataFrame, YEARS: list, REQ_GAMES, REQ_MIN) -> \
         pd.DataFrame:
     '''
@@ -73,7 +123,7 @@ def modifyData(df: pd.DataFrame, YEARS: list, REQ_GAMES, REQ_MIN) -> \
 
     ##########################
 
-   # df = removeDuplicates(df)
+    df = removeDuplicates(df)
 
     ##########################
     # Remove nan features if over a criteria
