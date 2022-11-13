@@ -8,7 +8,32 @@
 #       research paper. Dataset provided by Omri Goldstein.
 #       https://www.kaggle.com/datasets/drgilermo/nba-players-stats?select=Seasons_Stats.csv
 #
+#   Input:
+#       1) Season_Stats.csv - Dataset from Basketball-Reference.com 's
+#       'Total' and 'Advanced' data.
+#       2) Players.csv - Dataset from Kaggle (same location as INPUT 1)) that
+#       contains the heights and weights of all players in INPUT 1.
+#   Output:
+#       1) Season_Stats_<year1>_<year2>.csv - A csv file containing a
+#       FILTERED set of NBA players statistics for ALL years inbetween two
+#       year inputs.
+#       2) dqr_ALL_Season_Stats.csv - a DataQualityReport for every
+#       provided season of the loaded statistics before entry filtering.
+#       3) Season_Stats_<year1>-<year2>.csv - statistics of NBA Players
+#       between the specified years after filtering.
+#       4) dqr_FILTERED_Season_Stats_<year1>-<year2>.csv - DataQualityReport
+#       of data entries after filtering and inbetween the specified years.
+
 ## Control flags and constants
+# OUTPUT_FILES - Boolean. Decide if the script should create new files.
+# PLAYER_PATH - File path to a dataset with player height and weight
+# DATA_PATH - File path to a dataset with player statistics
+# NON_NUMERIC_COLUMNS - List from DATA_PATH of features that are not Numeric.
+# REQ_GAMES - Numeric. Filter to remove players that don't play enough games
+#               in a season.
+# REG_MIN - Numeric. Filter to remove players that don't play enough
+#               'minutes per game' in a season.
+
 ################################################################################
 
 OUTPUT_FILES = True
@@ -22,15 +47,16 @@ def modifyData(df: pd.DataFrame, YEARS: list, REQ_GAMES, REQ_MIN) -> \
         pd.DataFrame:
     '''
         :param df:
-        :return:
+        :return: pd.DataFrame:
 
         Edit the dataset in the following ways
         1) Remove features not needed for model
-        2) Apply filters
+        2) Consolidate players with multiple entries in a single season.
+        3) Apply filters
             Player must have played in specific years: years = { firstYear, SecondYear }
             Player must have played in at least x games.
             Player must have played at least y minutes per game played.
-        '''
+    '''
 
     ##########################
     # Feature Cleanup
@@ -44,6 +70,10 @@ def modifyData(df: pd.DataFrame, YEARS: list, REQ_GAMES, REQ_MIN) -> \
 
     # Remove all player names of 'nan'
     df = df[~pd.isna(df['Player'])]
+
+    ##########################
+
+   # df = removeDuplicates(df)
 
     ##########################
     # Remove nan features if over a criteria
@@ -97,7 +127,6 @@ def modifyData(df: pd.DataFrame, YEARS: list, REQ_GAMES, REQ_MIN) -> \
     # 3) Time filter
     df = df[(df['MP'] >= REQ_GAMES * REQ_MIN)]
 
-
     return df
 
 
@@ -120,14 +149,16 @@ def combineData(df_player: pd.DataFrame, df_stats: pd.DataFrame) -> \
 ##############################
 ##############################
 ##############################
-# Load dataset
+# Load datasets
 
 PLAYER_PATH = "../data/Players.csv"
-DATA_PATH = "../data/Seasons_Stats.csv"
+#DATA_PATH = "../data/Seasons_Stats.csv" #1950-2017
+DATA_PATH = "../data/Seasons_Stats_1950_2022.csv" #1950-2022
 
 df_players = pd.read_csv(PLAYER_PATH)
 df_stats = pd.read_csv(DATA_PATH)
 
+# Add specific features from 'PLAYER_PATH' to the 'DATA_PATH' dataset
 df_data = combineData(df_players, df_stats)
 
 ##############################
@@ -147,35 +178,40 @@ if OUTPUT_FILES:
 ##############################
 # Pre-process the data
 
-YEARS = [1971, 2017]
+YEARS = [[1971, 1980],
+         [1981, 1990],
+         [1991, 2000],
+         [2001, 2010],
+         [2011, 2020]]
 REQ_GAMES = 20
 REQ_MIN = 10
 
-df_year = df_data[(df_data['Year'] >= YEARS[0]) & (df_data['Year'] <= YEARS[1])]
-report_decade = DataQualityReport()
-report_decade.quickDQR(df_year, df_year.columns, NON_NUMERIC_COLUMNS)
+for YEAR in YEARS:
+    df_year = df_data[(df_data['Year'] >= YEAR[0]) & (df_data['Year'] <= YEAR[1])]
+    report_decade = DataQualityReport()
+    report_decade.quickDQR(df_year, df_year.columns, NON_NUMERIC_COLUMNS)
 
-if OUTPUT_FILES:
-    OUTPUT_PATH_DQR = "../data/dqr_Season_Stats_{}-{}.csv".format(YEARS[0], YEARS[1])
-    report_decade.to_csv(OUTPUT_PATH_DQR)
+    if OUTPUT_FILES:
+        OUTPUT_PATH_DQR = "../data/dqr_Season_Stats_{}-{}.csv".format(YEAR[0], YEAR[1])
+        report_decade.to_csv(OUTPUT_PATH_DQR)
 
-df_data = modifyData(df_data, YEARS, REQ_GAMES, REQ_MIN)
-print("Data Modification: COMPLETE")
+    df_year = modifyData(df_year, YEAR, REQ_GAMES, REQ_MIN)
+    print("Data Modification: COMPLETE")
 
 
-##############################
-# Output a Data Quality Report for pre-processed data
+    ##############################
+    # Output a Data Quality Report for pre-processed data
 
-OUTPUT_PATH_DQR = "../data/dqr_FILTERED_Season_Stats_{}-{}.csv".format(YEARS[0], YEARS[1])
-OUTPUT_PATH_DATA = "../data/Season_Stats_{}-{}.csv".format(YEARS[0], YEARS[1])
-NON_NUMERIC_COLUMNS = ['Player', 'Tm', 'Pos']
+    OUTPUT_PATH_DQR = "../data/dqr_FILTERED_Season_Stats_{}-{}.csv".format(YEAR[0], YEAR[1])
+    OUTPUT_PATH_DATA = "../data/Season_Stats_{}-{}.csv".format(YEAR[0], YEAR[1])
+    NON_NUMERIC_COLUMNS = ['Player', 'Tm', 'Pos']
 
-report = DataQualityReport()
-report.quickDQR(df_data, df_data.columns, NON_NUMERIC_COLUMNS)
+    report = DataQualityReport()
+    report.quickDQR(df_year, df_year.columns, NON_NUMERIC_COLUMNS)
 
-if OUTPUT_FILES:
-    report.to_csv(OUTPUT_PATH_DQR)
-    df_data.to_csv(OUTPUT_PATH_DATA)
+    if OUTPUT_FILES:
+        report.to_csv(OUTPUT_PATH_DQR)
+        df_year.to_csv(OUTPUT_PATH_DATA)
 
 '''
 NOTES - Filtered players data

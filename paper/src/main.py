@@ -11,8 +11,8 @@ import pandas as pd
 ##########################
 
 DEBUG = False
-HIERARCHICAL = False
-SOM = True
+HIERARCHICAL = True
+SOM = False
 
 
 YEARS = [[1970, 1979],
