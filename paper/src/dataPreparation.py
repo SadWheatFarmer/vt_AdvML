@@ -133,7 +133,7 @@ df_data = combineData(df_players, df_stats)
 ##############################
 # Output an initial Data Quality Report on the RAW data
 
-from vt_ApplicationsOfML.Libraries.DataExploration.DataQualityReport import DataQualityReport
+from vt_AdvML.paper.lib.DataQualityReport import DataQualityReport
 
 OUTPUT_PATH = "../data/dqr_ALL_Season_Stats.csv"
 NON_NUMERIC_COLUMNS = ['Unnamed: 0', 'Player', 'Tm', 'Pos', 'blanl', 'blank2']
@@ -147,7 +147,7 @@ if OUTPUT_FILES:
 ##############################
 # Pre-process the data
 
-YEARS = [1970, 2017]
+YEARS = [1971, 2017]
 REQ_GAMES = 20
 REQ_MIN = 10
 
