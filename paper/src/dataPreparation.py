@@ -72,24 +72,52 @@ def removeDuplicates(df: pd.DataFrame) -> pd.DataFrame:
             # season.
             if df_oneYear['Player'].value_counts()[name] > 1:
                 indicies = df_oneYear[df_oneYear['Player'] == name].index
-                refRow = df[df['ID'] == indicies[0]]
 
                 # For each feature, ether SUM or AVG all the data entries.
                 for feature in df.columns:
-                    # Loop through each found player entry.
-                    for i in indicies[1:]:
+                    # Loop through each found player entry. Make a list of
+                    # values.
+                    vals = []
+                    if feature in NON_COLUMNS:
+                        continue
+                    else:
+                        for i in indicies[:]:
+                            vals.append(
+                                df_oneYear[df_oneYear['ID'] == i][feature].iat[0])
+
                         if feature in SUM_COLUMNS:
-                            refRow[feature] = refRow[feature].iat[0] + \
-                                              df_oneYear[df_oneYear['ID'] ==
-                                                         i][feature].iat[0]
+                            val = sum(vals)
                         elif feature in AVG_COLUMNS:
-                            print("do something")
+                            val = sum(vals) / len(vals)
                         else:
                             break
+
+                        # Do feature checks
+                        # 1) Apply the collective value
+                        # 2) or do not make any modification due to data
+                        # weirdness.
+                        replaceValue = False
+                        if feature in ['G', 'GS']:
+                            if val <= 82:
+                                replaceValue = True
+                            else:
+                                replaceValue = True
+                                val = 82
+                        else:
+                            replaceValue = True
+
+                        if replaceValue:
+                            df.at[indicies[0], feature] = val
+
+                # Delete non-first entries
+                df = df.drop(indicies[1:])
+
+
             # If there is only one player data entry, do not do anything.
             else:
                 continue
 
+    return df
 
 
 
@@ -228,11 +256,14 @@ if OUTPUT_FILES:
 ##############################
 # Pre-process the data
 
+
 YEARS = [[1971, 1980],
          [1981, 1990],
          [1991, 2000],
          [2001, 2010],
          [2011, 2020]]
+
+#YEARS = [[1971, 1980]]
 REQ_GAMES = 20
 REQ_MIN = 10
 
@@ -245,8 +276,9 @@ for YEAR in YEARS:
         OUTPUT_PATH_DQR = "../data/dqr_Season_Stats_{}-{}.csv".format(YEAR[0], YEAR[1])
         report_decade.to_csv(OUTPUT_PATH_DQR)
 
+    print("Data Modification {}-{}: START".format(YEAR[0], YEAR[1]))
     df_year = modifyData(df_year, YEAR, REQ_GAMES, REQ_MIN)
-    print("Data Modification: COMPLETE")
+    print("Data Modification {}-{}: COMPLETE".format(YEAR[0], YEAR[1]))
 
 
     ##############################
