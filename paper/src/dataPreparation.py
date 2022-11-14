@@ -40,6 +40,8 @@ OUTPUT_FILES = True
 
 import pandas as pd
 import numpy as np
+from ..lib.DataQualityReport import DataQualityReport
+
 
 ##############################
 
@@ -120,7 +122,6 @@ def removeDuplicates(df: pd.DataFrame) -> pd.DataFrame:
     return df
 
 
-
 def modifyData(df: pd.DataFrame, YEARS: list, REQ_GAMES, REQ_MIN) -> \
         pd.DataFrame:
     '''
@@ -168,7 +169,6 @@ def modifyData(df: pd.DataFrame, YEARS: list, REQ_GAMES, REQ_MIN) -> \
         else:
             continue
 
-
     ##########################
     # Cleanup of the Position feature
 
@@ -194,7 +194,6 @@ def modifyData(df: pd.DataFrame, YEARS: list, REQ_GAMES, REQ_MIN) -> \
 
     df = pd.merge(df, df_oneHot_pos, how='left', on='ID')
 
-
     ##########################
     # Player Filters
 
@@ -210,7 +209,6 @@ def modifyData(df: pd.DataFrame, YEARS: list, REQ_GAMES, REQ_MIN) -> \
 
 def combineData(df_player: pd.DataFrame, df_stats: pd.DataFrame) -> \
         pd.DataFrame:
-
     # Drop some of the player features
     RETAINED_FEATURES = ['Player', 'height', 'weight']
     df_player = df_player[RETAINED_FEATURES]
@@ -241,8 +239,6 @@ df_data = combineData(df_players, df_stats)
 
 ##############################
 # Output an initial Data Quality Report on the RAW data
-
-from vt_AdvML.paper.lib.DataQualityReport import DataQualityReport
 
 OUTPUT_PATH = "../data/dqr_ALL_Season_Stats.csv"
 NON_NUMERIC_COLUMNS = ['Unnamed: 0', 'Player', 'Tm', 'Pos', 'blanl', 'blank2']
