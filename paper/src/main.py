@@ -11,8 +11,9 @@ import pandas as pd
 ##########################
 
 DEBUG = False
+INCLUDE_POS = False
 HIERARCHICAL = True
-SOM = False
+SOM = True
 
 
 YEARS = [[1971, 1980],
@@ -29,14 +30,14 @@ for YEAR in YEARS:
     df_data = pd.read_csv(DATA_PATH)
 
     if HIERARCHICAL:
-        if hc.hierarchicalClustering(df_data, [YEAR[0], YEAR[1]]):
+        if hc.hierarchicalClustering(df_data, [YEAR[0], YEAR[1]], INCLUDE_POS):
             print("Model1 (Divisive Clustering): COMPLETE")
 
         if hc.calcPositionConc(df_data, 'Hierarchy', [YEAR[0], YEAR[1]]):
             print("Model1 Position Extraction: COMPLETE")
 
     if SOM:
-        if som(df_data, [YEAR[0], YEAR[1]]):
+        if som(df_data, [YEAR[0], YEAR[1]], INCLUDE_POS):
             print("Model2 (SOM Clustering): COMPLETE")
 
         if hc.calcPositionConc(df_data, 'SOM', [YEAR[0], YEAR[1]]):

@@ -1,0 +1,1 @@
+This directory contains the output of the various models executed from 'main.py'

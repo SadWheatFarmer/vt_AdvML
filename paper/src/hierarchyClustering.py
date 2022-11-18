@@ -25,30 +25,33 @@ def normalizeData(np_array):
 
     return x_normalized
 
-def modifyDataForModel(df: pd.DataFrame, pos) -> pd.DataFrame:
+def modifyDataForModel(df: pd.DataFrame, INCLUDE_POS) -> pd.DataFrame:
 
     # Add the extra id column. BUG
     df = df.drop(columns='Unnamed: 0')
 
     # Remove Features
-    if pos:
-        REMOVE_FEATURES = ['Player', 'Tm', 'Pos']
-        print("Include player POSITION in the model.")
+    REMOVE_FEATURES = ['ID', 'Player', 'Tm', 'Pos']
+    if INCLUDE_POS:
+        print("Include ONE-HOT ENCODED player POSITION in the model.")
     else:
-        REMOVE_FEATURES = ['Player', 'Tm', 'Pos',
-                           "Pos_C", "Pos_F", "Pos_G", "Pos_PF",
-                           "Pos_PG", "Pos_SF", 'Pos_SG']
-        print("Remove player POSITION from the model.")
+        if len(df[df['Pos'] == 'G']) > 0:
+            REMOVE_FEATURES.extend(["Pos_G", "Pos_F", "Pos_C"])
+        else:
+            REMOVE_FEATURES.extend(["Pos_PG", 'Pos_SG',
+                                    "Pos_SF", "Pos_PF",
+                                    "Pos_C"])
+        print("Remove ONE-HOT ENCODED player POSITION from the model.")
 
     df = df.drop(columns=REMOVE_FEATURES)
 
     return df
 
 
-def hierarchicalClustering(df: pd.DataFrame, years: list) -> bool:
+def hierarchicalClustering(df: pd.DataFrame, years: list, includePos) -> bool:
     print("---- Start Hierarchy Clustering model ----")
 
-    df_data = modifyDataForModel(df, True)
+    df_data = modifyDataForModel(df, includePos)
     x = normalizeData(df_data.to_numpy())
     print("Data for Model Modification: COMPLETE")
 
@@ -64,7 +67,7 @@ def hierarchicalClustering(df: pd.DataFrame, years: list) -> bool:
     # Documentation of .cut_tree vs .fcluster (I think .fcluster is the way
     # to go.
     # https://docs.scipy.org/doc/scipy/reference/cluster.hierarchy.html
-    numClusters = 5
+    numClusters = len(df['Pos'].unique())
     clusters = shc.cut_tree(Z, n_clusters=numClusters)
 
     # For a specific 't' number of clusters, get a 1D vector of size=(
@@ -124,13 +127,14 @@ def calcPositionConc(df: pd.DataFrame, modelName, YEARS: list) -> bool:
     #   Clusters must be labeled as 0 to x
     #   Function assumes that the player's are clustered based on 5 positions.
 
-    col = ['Total', 'PG', 'SG', 'SF', 'PF', 'C']
+    col = ['Total']
+    col.extend(df['Pos'].unique())
 
     df_conc = pd.DataFrame(columns=col)
 
     # i = cluster #
     # j = specific position
-    fig, ax = plt.subplots(nrows=1, ncols=5, squeeze=True)
+    fig, ax = plt.subplots(nrows=1, ncols=len(df['Pos'].unique()), squeeze=True)
     for i in range(1, len(col[1:])+1):
         df_x = df[df['Cluster'] == i]
         count = [len(df_x)]
@@ -143,9 +147,9 @@ def calcPositionConc(df: pd.DataFrame, modelName, YEARS: list) -> bool:
         # TODO - Do better styling https://www.pythoncharts.com/matplotlib/pie-chart-matplotlib/
         ax[i-1].set_title("Cluster {}".format(i))
         if i == 1:
-            ax[i-1].pie(count[1:6], labels=col[1:6], normalize=True)
+            ax[i-1].pie(count[1:], labels=col[1:], normalize=True)
         else:
-            ax[i-1].pie(count[1:6], normalize=True)
+            ax[i-1].pie(count[1:], normalize=True)
 
         # Save the concentrations to publish a .csv
         df_conc = df_conc.append(

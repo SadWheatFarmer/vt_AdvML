@@ -28,33 +28,36 @@ def normalizeData(np_array) -> np.array:
 
     return x_normalized
 
-def modifyDataForModel(df: pd.DataFrame, pos) -> pd.DataFrame:
+def modifyDataForModel(df: pd.DataFrame, INCLUDE_POS) -> pd.DataFrame:
 
     # Add the extra id column. BUG
     df = df.drop(columns='Unnamed: 0')
 
     # Remove Features
-    if pos:
-        REMOVE_FEATURES = ['Player', 'Tm', 'Pos']
-        print("Include player POSITION in the model.")
+    REMOVE_FEATURES = ['ID', 'Player', 'Tm', 'Pos']
+    if INCLUDE_POS:
+        print("Include ONE-HOT ENCODED player POSITION in the model.")
     else:
-        REMOVE_FEATURES = ['Player', 'Tm', 'Pos',
-                           "Pos_C", "Pos_F", "Pos_G", "Pos_PF",
-                           "Pos_PG", "Pos_SF", 'Pos_SG']
-        print("Remove player POSITION from the model.")
+        if len(df[df['Pos'] == 'G']) > 0:
+            REMOVE_FEATURES.extend(["Pos_C", "Pos_F", "Pos_G"])
+        else:
+            REMOVE_FEATURES.extend(["Pos_PG", 'Pos_SG',
+                                    "Pos_SF", "Pos_PF",
+                                    "Pos_C"])
+        print("Remove ONE-HOT ENCODED player POSITION from the model.")
 
     df = df.drop(columns=REMOVE_FEATURES)
 
     return df
 
-def som(df: pd.DataFrame, years: list) -> bool:
+def som(df: pd.DataFrame, years: list, includePos) -> bool:
     print("---- Start SOM Clustering model ----")
 
-    df_data = modifyDataForModel(df, True)
+    df_data = modifyDataForModel(df, includePos)
     x = normalizeData(df_data.to_numpy())
     print("Data for Model Modification: COMPLETE")
 
-    nba_som = SOM(m=5, n=1, dim=len(x[0]))
+    nba_som = SOM(m=len(df['Pos'].unique()), n=1, dim=len(x[0]))
     nba_som.fit(x, epochs=1)
     labels = nba_som.predict(x)
 

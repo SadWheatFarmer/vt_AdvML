@@ -122,7 +122,56 @@ def removeDuplicates(df: pd.DataFrame) -> pd.DataFrame:
     return df
 
 
-def modifyData(df: pd.DataFrame, YEARS: list, REQ_GAMES, REQ_MIN) -> \
+def cleanPositionFeature(df: pd.DataFrame, THREE_POSITIONS_FLAG) -> pd.DataFrame:
+    '''
+    1) Only let a player have one position.
+           Only take the first position before a '-' character.
+
+    2) Limit the cardinality of the 'position' feature based on the input
+     THREE_POSITIONS_FLAG.
+        if True, then convert down all specialized Guard 'G' and Forward 'F'
+            positions into their simpler equivalents.
+            - numPos3 = ['G', 'F', 'C']
+        if False, then ensure all positions are one of the following:
+            - numPos5 = ['PG', 'SG', 'SF', 'PF', 'C']
+
+    :param df: dataframe with all statistical data
+    :param THREE_POSITIONS_FLAG: boolean defining how many position options.
+    :return: Dataframe with updated 'Position' feature.
+    '''
+
+    for id in df['ID']:
+        # 1) In each entry, only use the first position listed if a player is
+        # listed with multiple positions. Ex: PG-SG, F-C, G-F, etc
+        pos = df.loc[id, 'Pos']
+        dash_position = pos.find('-')
+
+        # If found dash char '-' is not found (-1) then do nothing
+        if dash_position == 1:
+            pos = pos[:1]
+        elif dash_position == 2:
+            pos = pos[:2]
+
+        # 2) Only allow 3 or 5 cardinality for the 'position' feature
+        if THREE_POSITIONS_FLAG:
+            if pos == 'PG' or pos == 'SG':
+                pos = 'G'
+            elif pos == 'SF' or pos == 'PF':
+                pos = 'F'
+        else:
+            if pos == 'G':
+                pos = 'SG'
+            elif pos == 'F':
+                pos = 'SF'
+
+        # Set the resulting position categorical.
+        df.loc[id, 'Pos'] = pos
+
+    return df
+
+def modifyData(df: pd.DataFrame, YEARS: list,
+               REQ_GAMES, REQ_MIN,
+               THREE_POSITIONS_FLAG) -> \
         pd.DataFrame:
     '''
         :param df:
@@ -151,7 +200,7 @@ def modifyData(df: pd.DataFrame, YEARS: list, REQ_GAMES, REQ_MIN) -> \
     df = df[~pd.isna(df['Player'])]
 
     ##########################
-
+    # Consolidate any entries that are listed more than once.
     df = removeDuplicates(df)
 
     ##########################
@@ -170,23 +219,8 @@ def modifyData(df: pd.DataFrame, YEARS: list, REQ_GAMES, REQ_MIN) -> \
             continue
 
     ##########################
-    # Cleanup of the Position feature
-
-    # Eliminate multiple positions. Only take the first position before a '-'.
-    # TODO - Decide if to do 3 pos {G, F, C} or 5 {PG, SG, SF, PF, C}
-    #        I think it will be based on the year. Check cardinality of
-    #        'position' feature. IDEA: Always convert down.
-    #        If over 5, then convert to 3.
-    #        If 4, then convert to 3
-    for id in df['ID']:
-        pos = df.loc[id, 'Pos']
-        dash_position = pos.find('-')
-        if dash_position == -1:
-            continue
-        elif dash_position == 1:
-            df.loc[id, 'Pos'] = pos[:1]
-        elif dash_position == 2:
-            df.loc[id, 'Pos'] = pos[:2]
+    # Ensure 'Position' feature has only 3 or 5 categories.
+    df = cleanPositionFeature(df, THREE_POSITIONS_FLAG)
 
     # One-Hot Encode the 'Pos' feature
     df_oneHot_pos = pd.get_dummies(df['Pos'], prefix='Pos')
@@ -259,9 +293,9 @@ YEARS = [[1971, 1980],
          [2001, 2010],
          [2011, 2020]]
 
-#YEARS = [[1971, 1980]]
 REQ_GAMES = 20
 REQ_MIN = 10
+THREE_POSITION_FLAG = False
 
 for YEAR in YEARS:
     df_year = df_data[(df_data['Year'] >= YEAR[0]) & (df_data['Year'] <= YEAR[1])]
@@ -273,7 +307,7 @@ for YEAR in YEARS:
         report_decade.to_csv(OUTPUT_PATH_DQR)
 
     print("Data Modification {}-{}: START".format(YEAR[0], YEAR[1]))
-    df_year = modifyData(df_year, YEAR, REQ_GAMES, REQ_MIN)
+    df_year = modifyData(df_year, YEAR, REQ_GAMES, REQ_MIN, THREE_POSITION_FLAG)
     print("Data Modification {}-{}: COMPLETE".format(YEAR[0], YEAR[1]))
 
 
