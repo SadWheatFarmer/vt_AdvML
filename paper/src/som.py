@@ -14,47 +14,38 @@
 ## Control flags and constants
 ################################################################################
 
-
-import numpy as np
 import pandas as pd
 from sklearn_som.som import SOM
-from sklearn.preprocessing import StandardScaler, normalize
 
-def normalizeData(np_array) -> np.array:
-    scaler = StandardScaler()
-    x_scaled = scaler.fit_transform(np_array.tolist())
+import lib.modelCommon as common
 
-    x_normalized = normalize(x_scaled)
 
-    return x_normalized
-
-def modifyDataForModel(df: pd.DataFrame, INCLUDE_POS) -> pd.DataFrame:
-
-    # Add the extra id column. BUG
-    df = df.drop(columns='Unnamed: 0')
+def modifyDataForModel(df: pd.DataFrame,
+                       INCLUDE_POS_FLAG, THREE_POS_FLAG) -> pd.DataFrame:
 
     # Remove Features
     REMOVE_FEATURES = ['ID', 'Player', 'Tm', 'Pos']
-    if INCLUDE_POS:
-        print("Include ONE-HOT ENCODED player POSITION in the model.")
-    else:
-        if len(df[df['Pos'] == 'G']) > 0:
-            REMOVE_FEATURES.extend(["Pos_C", "Pos_F", "Pos_G"])
+
+    # Also delete position features if they should not be used in modeling.
+    if ~INCLUDE_POS_FLAG:
+        if THREE_POS_FLAG:
+            REMOVE_FEATURES.extend(["Pos_G", "Pos_F", "Pos_C"])
         else:
             REMOVE_FEATURES.extend(["Pos_PG", 'Pos_SG',
                                     "Pos_SF", "Pos_PF",
                                     "Pos_C"])
-        print("Remove ONE-HOT ENCODED player POSITION from the model.")
 
     df = df.drop(columns=REMOVE_FEATURES)
 
     return df
 
-def som(df: pd.DataFrame, years: list, includePos) -> bool:
+
+def som(df: pd.DataFrame, YEARS: list,
+        INCLUDE_POS, THREE_POS_FLAG) -> bool:
     print("---- Start SOM Clustering model ----")
 
-    df_data = modifyDataForModel(df, includePos)
-    x = normalizeData(df_data.to_numpy())
+    df_data = modifyDataForModel(df, INCLUDE_POS, THREE_POS_FLAG)
+    x = common.normalizeData(df_data.to_numpy())
     print("Data for Model Modification: COMPLETE")
 
     nba_som = SOM(m=len(df['Pos'].unique()), n=1, dim=len(x[0]))
@@ -65,5 +56,15 @@ def som(df: pd.DataFrame, years: list, includePos) -> bool:
     labels = labels + 1
     df['Cluster'] = labels
 
-    return True
+    # Isolate positions per player in the clusters
+    # df_cluster = df[['ID', 'Year', 'Player', 'Pos', 'Cluster']]
+    # df_cluster.to_csv("../output/MODEL_Labels_SOM_{}-{}.csv".format(
+    #                     years[0],
+    #                     years[1]),
+    #                     index=False)
+
+    common.calcPositionConc(df, "SOM", YEARS)
+    common.reportClusterScores(df, INCLUDE_POS)
+
+    return df_data
 

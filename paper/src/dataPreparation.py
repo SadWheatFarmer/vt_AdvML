@@ -36,11 +36,9 @@
 
 ################################################################################
 
-OUTPUT_FILES = True
-
 import pandas as pd
 import numpy as np
-from ..lib.DataQualityReport import DataQualityReport
+from lib.DataQualityReport import DataQualityReport
 
 
 ##############################
@@ -57,7 +55,9 @@ def removeDuplicates(df: pd.DataFrame) -> pd.DataFrame:
     :return: Pandas Dataframe with combined data entries
     '''
 
-    NON_COLUMNS = ['ID', 'Year', 'Player', 'height', 'weight', 'Age', 'Pos', 'Tm']
+    print("**** Data Modification: removeDuplicates - START")
+
+    STATIC_COLUMNS = ['ID', 'Year', 'Player', 'height', 'weight', 'Age', 'Pos', 'Tm']
     SUM_COLUMNS = ['G', 'GS', 'MP',  'OWS', 'DWS', 'WS', 'ORB', 'DRB', 'TRB',
                    'FG', 'FGA', 'AST', 'STL', 'BLK', 'TOV', 'PF', 'PTS', '3P',
                    '3PA', '2P', '2PA', 'FT', 'FTA']
@@ -80,7 +80,7 @@ def removeDuplicates(df: pd.DataFrame) -> pd.DataFrame:
                     # Loop through each found player entry. Make a list of
                     # values.
                     vals = []
-                    if feature in NON_COLUMNS:
+                    if feature in STATIC_COLUMNS:
                         continue
                     else:
                         for i in indicies[:]:
@@ -94,7 +94,8 @@ def removeDuplicates(df: pd.DataFrame) -> pd.DataFrame:
                         else:
                             break
 
-                        # Do feature checks
+                        # Sanity Check. Replace the value if result doesn't
+                        # make any sense.
                         # 1) Apply the collective value
                         # 2) or do not make any modification due to data
                         # weirdness.
@@ -118,6 +119,8 @@ def removeDuplicates(df: pd.DataFrame) -> pd.DataFrame:
             # If there is only one player data entry, do not do anything.
             else:
                 continue
+
+    print("**** Data Modification: removeDuplicates - COMPLETE")
 
     return df
 
@@ -186,13 +189,22 @@ def modifyData(df: pd.DataFrame, YEARS: list,
             Player must have played at least y minutes per game played.
     '''
 
+    print("*** Data Modification {}-{}: START".format(YEARS[0], YEARS[1]))
+
+    ##########################
+    # Initial Player Filter
+
+    # 1) Year filter
+    df = df[(df['Year'] >= YEARS[0]) & (df['Year'] <= YEARS[1])]
+
+
     ##########################
     # Feature Cleanup
 
     # Add a name to the used ID feature to use as the dataframe index
     df = df.rename(columns={'Unnamed: 0': "ID"})
 
-    # Remove Features
+    # Remove features that could break the program execution
     REMOVE_FEATURES = ['blanl', 'blank2']
     df = df.drop(columns=REMOVE_FEATURES)
 
@@ -210,7 +222,7 @@ def modifyData(df: pd.DataFrame, YEARS: list,
         nanCount = df[col].isnull().sum()
         if nanCount/len(df[col]) > NAN_LIMIT and\
                 col not in ['GS', '3P', '3PA', '3P%', 'FT%']:
-            print("Delete column {} with "
+            print("**** Delete column {} with "
                   "{:.2f}% nan values".format(col, nanCount/len(df[col])*100))
             df = df.drop([col], axis=1)
         elif nanCount:
@@ -219,24 +231,26 @@ def modifyData(df: pd.DataFrame, YEARS: list,
             continue
 
     ##########################
-    # Ensure 'Position' feature has only 3 or 5 categories.
+    # Ensure 'Position' feature has only 3 or 5 categories if included.
     df = cleanPositionFeature(df, THREE_POSITIONS_FLAG)
 
-    # One-Hot Encode the 'Pos' feature
+    # Add in One-Hot Encoding 'Pos' feature values.
     df_oneHot_pos = pd.get_dummies(df['Pos'], prefix='Pos')
     df_oneHot_pos['ID'] = df['ID']
+
+    # TODO - Re order OneHot columns in player position size order
 
     df = pd.merge(df, df_oneHot_pos, how='left', on='ID')
 
     ##########################
-    # Player Filters
+    # Specific Player Filters
 
-    # 1) Year filter
-    df = df[(df['Year'] >= YEARS[0]) & (df['Year'] <= YEARS[1])]
     # 2) Game filter
     df = df[(df['G'] >= REQ_GAMES)]
     # 3) Time filter
     df = df[(df['MP'] >= REQ_GAMES * REQ_MIN)]
+
+    print("*** Data Modification {}-{}: COMPLETE".format(YEARS[0], YEARS[1]))
 
     return df
 
@@ -256,81 +270,97 @@ def combineData(df_player: pd.DataFrame, df_stats: pd.DataFrame) -> \
     return df_stats
 
 
-##############################
-##############################
-##############################
-# Load datasets
-
-PLAYER_PATH = "../data/Players.csv"
-#DATA_PATH = "../data/Seasons_Stats.csv" #1950-2017
-DATA_PATH = "../data/Seasons_Stats_1950_2022.csv" #1950-2022
-
-df_players = pd.read_csv(PLAYER_PATH)
-df_stats = pd.read_csv(DATA_PATH)
-
-# Add specific features from 'PLAYER_PATH' to the 'DATA_PATH' dataset
-df_data = combineData(df_players, df_stats)
-
-##############################
-# Output an initial Data Quality Report on the RAW data
-
-OUTPUT_PATH = "../data/dqr_ALL_Season_Stats.csv"
-NON_NUMERIC_COLUMNS = ['Unnamed: 0', 'Player', 'Tm', 'Pos', 'blanl', 'blank2']
-
-report_all = DataQualityReport()
-report_all.quickDQR(df_data, df_data.columns, NON_NUMERIC_COLUMNS)
-
-if OUTPUT_FILES:
-    report_all.to_csv(OUTPUT_PATH)
-
-##############################
-# Pre-process the data
-
-
-YEARS = [[1971, 1980],
-         [1981, 1990],
-         [1991, 2000],
-         [2001, 2010],
-         [2011, 2020]]
-
-REQ_GAMES = 20
-REQ_MIN = 10
-THREE_POSITION_FLAG = False
-
-for YEAR in YEARS:
-    df_year = df_data[(df_data['Year'] >= YEAR[0]) & (df_data['Year'] <= YEAR[1])]
-    report_decade = DataQualityReport()
-    report_decade.quickDQR(df_year, df_year.columns, NON_NUMERIC_COLUMNS)
-
-    if OUTPUT_FILES:
-        OUTPUT_PATH_DQR = "../data/dqr_Season_Stats_{}-{}.csv".format(YEAR[0], YEAR[1])
-        report_decade.to_csv(OUTPUT_PATH_DQR)
-
-    print("Data Modification {}-{}: START".format(YEAR[0], YEAR[1]))
-    df_year = modifyData(df_year, YEAR, REQ_GAMES, REQ_MIN, THREE_POSITION_FLAG)
-    print("Data Modification {}-{}: COMPLETE".format(YEAR[0], YEAR[1]))
-
+def outputReferenceFiles(df_RAW: pd.DataFrame, df_MODEL: pd.DataFrame,
+                         OUTPUT_PATH, YEARS_PAIRS,
+                         NON_NUMERIC_COLUMNS):
 
     ##############################
-    # Output a Data Quality Report for pre-processed data
+    # Output an initial Data Quality Report on the RAW data
+    OUTPUT_PATH_RAW = OUTPUT_PATH + "Season_Stats_dqr_RAW.csv"
+    report_raw = DataQualityReport()
+    report_raw.quickDQR(df_RAW, df_RAW.columns, NON_NUMERIC_COLUMNS)
+    report_raw.to_csv(OUTPUT_PATH_RAW)
 
-    OUTPUT_PATH_DQR = "../data/dqr_FILTERED_Season_Stats_{}-{}.csv".format(YEAR[0], YEAR[1])
-    OUTPUT_PATH_DATA = "../data/Season_Stats_{}-{}.csv".format(YEAR[0], YEAR[1])
-    NON_NUMERIC_COLUMNS = ['Player', 'Tm', 'Pos']
+    ##############################
+    # Output a .csv and a Data Quality Report for the data used in modeling
+    OUTPUT_PATH_DQR = OUTPUT_PATH + "Season_Stats_dqr_MODEL_{}-{}.csv".format(
+        YEARS_PAIRS[0][0], YEARS_PAIRS[len(YEARS_PAIRS)-1][1])
+    report_raw = DataQualityReport()
+    report_raw.quickDQR(df_MODEL, df_MODEL.columns, NON_NUMERIC_COLUMNS)
+    report_raw.to_csv(OUTPUT_PATH_DQR)
 
-    report = DataQualityReport()
-    report.quickDQR(df_year, df_year.columns, NON_NUMERIC_COLUMNS)
+    OUTPUT_PATH_MODEL = OUTPUT_PATH + "Season_Stats_MODEL_{}-{}.csv".format(
+        YEARS_PAIRS[0][0], YEARS_PAIRS[len(YEARS_PAIRS)-1][1])
+    df_MODEL.to_csv(OUTPUT_PATH_MODEL)
 
-    if OUTPUT_FILES:
+    ##############################
+    # Output a DataQualityReport and dataset for each Year-Pair
+    for YEAR in YEARS_PAIRS:
+        df_RAW_year = df_RAW[(df_RAW['Year'] >= YEAR[0])
+                          & (df_RAW['Year'] <= YEAR[1])]
+        df_MODEL_year = df_RAW[(df_RAW['Year'] >= YEAR[0])
+                             & (df_RAW['Year'] <= YEAR[1])]
+
+        ##############################
+        # Output a Data Quality Report for pre-processed data
+        OUTPUT_PATH_DQR = OUTPUT_PATH + "Season_Stats_dqr_RAW_{}-{}.csv".format(
+            YEAR[0], YEAR[1])
+        report_decade = DataQualityReport()
+        report_decade.quickDQR(df_RAW_year, df_RAW_year.columns,
+                               NON_NUMERIC_COLUMNS)
+        report_decade.to_csv(OUTPUT_PATH_DQR)
+
+        ##############################
+        # Output a Data Quality Report for processed data
+        OUTPUT_PATH_DQR = OUTPUT_PATH + "Season_Stats_dqr_MODEL_{}-{}.csv".format(
+            YEAR[0], YEAR[1])
+        report = DataQualityReport()
+        report.quickDQR(df_MODEL_year, df_MODEL_year.columns, NON_NUMERIC_COLUMNS)
         report.to_csv(OUTPUT_PATH_DQR)
-        df_year.to_csv(OUTPUT_PATH_DATA)
 
-'''
-NOTES - Filtered players data
-1) Almost all of the features have filled in data. 'n_missing' and 'n_zero' 
-are pretty low for nearly all features. Unlike the data for ALL years.
-2) 'Pos' has a cardinality of 16. That has to change.
-3) ALL data has 24691, and 2000-2009 has 4242 players.
-4) Some data features like BPM and BLK started in 1973-74
-5) Some features such as OBPM and DBPM can be negative. This is ok.
-'''
+
+##############################
+##############################
+##############################
+
+
+def initialDataModification(PLAYER_PATH, DATA_PATH,
+                            YEARS_PAIRS, REQ_GAMES, REQ_MIN,
+                            THREE_POSITION_FLAG, NON_NUMERIC_COLUMNS,
+                            OUTPUT_FILES_FLAG):
+
+    # Load datasets
+    df_players = pd.read_csv(PLAYER_PATH)
+    df_stats = pd.read_csv(DATA_PATH)
+
+    # Add specific features from 'PLAYER_PATH' to the 'DATA_PATH' dataset
+    df_data = combineData(df_players, df_stats)
+
+    # Process data using indicated constraints for ONLY the relevant years.
+    YEARS = [YEARS_PAIRS[0][0], YEARS_PAIRS[len(YEARS_PAIRS)-1][1]]
+    df_model = modifyData(df_data, YEARS, REQ_GAMES, REQ_MIN,
+                          THREE_POSITION_FLAG)
+
+    df_model.to_csv("../data/ref/Season_Stats_MODEL_{}-{}.csv".format(
+                    YEARS_PAIRS[0][0], YEARS_PAIRS[len(YEARS_PAIRS) - 1][1]),
+                    index=False)
+
+    # IF DESIRED, output various DQR and csv files about the data.
+    if OUTPUT_FILES_FLAG:
+        OUTPUT_PATH = "../data/ref/"
+        outputReferenceFiles(df_data, df_model,
+                             OUTPUT_PATH, YEARS_PAIRS, NON_NUMERIC_COLUMNS)
+
+    return df_model
+
+
+
+# '''
+# NOTES - Filtered players data
+# 1) Almost all of the features have filled in data. 'n_missing' and 'n_zero'
+# are pretty low for nearly all features. Unlike the data for ALL years.
+# 2) 'Pos' has a cardinality of 16. That has to change.
+# 3) ALL data has 24691, and 2000-2009 has 4242 players.
+# 4) Some data features like BPM and BLK started in 1973-74
+# 5) Some features such as OBPM and DBPM can be negative. This is ok.
+# '''
