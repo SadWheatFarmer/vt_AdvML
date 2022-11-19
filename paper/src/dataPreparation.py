@@ -39,8 +39,6 @@ def removeDuplicates(df: pd.DataFrame) -> pd.DataFrame:
     :return: Pandas Dataframe with combined data entries
     '''
 
-    print("**** Data Modification: removeDuplicates - START")
-
     STATIC_COLUMNS = ['ID', 'Year', 'Player', 'height', 'weight', 'Age', 'Pos', 'Tm']
     SUM_COLUMNS = ['G', 'GS', 'MP',  'OWS', 'DWS', 'WS', 'ORB', 'DRB', 'TRB',
                    'FG', 'FGA', 'AST', 'STL', 'BLK', 'TOV', 'PF', 'PTS', '3P',
@@ -213,6 +211,7 @@ def modifyData(df: pd.DataFrame, YEARS: list,
             df[col] = df[col].replace(np.nan, df[col].median())
         else:
             continue
+    print("**** Data Modification: Remove NaN Features - COMPLETE")
 
     ##########################
     # Ensure 'Position' feature has only 3 or 5 categories if included.

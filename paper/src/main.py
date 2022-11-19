@@ -92,7 +92,7 @@ YEARS = [[1971, 1980],
          [2011, 2020]]
 
 if DEBUG:
-    YEARS = [YEARS[0]]
+    YEARS = [YEARS[0], YEARS[4]]
 
 
 ##########################
@@ -118,12 +118,12 @@ for YEAR in YEARS:
                          & (df_data['Year'] <= YEAR[1])]
 
     if HIERARCHICAL:
-        df_model = hc.hierarchicalClustering(df_year, [YEAR[0], YEAR[1]],
-                                             INCLUDE_POS, THREE_POSITION_FLAG)
-        print("** Model1 (Divisive Clustering): COMPLETE")
+        hc.hierarchicalClustering(df_year, [YEAR[0], YEAR[1]],
+                                  INCLUDE_POS, THREE_POSITION_FLAG)
+        print("\n** Model1 (Divisive Clustering): COMPLETE")
 
     if SOM:
-        df_model = som(df_year, [YEAR[0], YEAR[1]],
-                       INCLUDE_POS, THREE_POSITION_FLAG)
-        print("** Model2 (SOM Clustering): COMPLETE")
+        som(df_year, [YEAR[0], YEAR[1]],
+                      INCLUDE_POS, THREE_POSITION_FLAG)
+        print("\n** Model2 (SOM Clustering): COMPLETE")
 
