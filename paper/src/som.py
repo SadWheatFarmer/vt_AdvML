@@ -11,7 +11,6 @@
 #   Reference
 #       Sklearn-somhttps://pypi.org/project/sklearn-som/#:~:text=sklearn%2Dsom%20is%20a%20minimalist,data%20and%20performing%20dimensionality%20reduction.
 #       Source Code: https://github.com/rileypsmith/sklearn-som
-## Control flags and constants
 ################################################################################
 
 import pandas as pd

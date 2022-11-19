@@ -1,3 +1,14 @@
+'''
+File:   modelCommon.py
+Author: John Smutny
+Course: ECE-5424: Advanced Machine Learning
+Date:   11/19/2022
+Description:
+    Support file to 'main.py'
+    Collection of functions common to all used models such as normalization,
+    scoring the resulting clusters, and creating 'Position Concentration PIE
+    Charts'.
+'''
 
 import matplotlib.pyplot as plt
 import pandas as pd

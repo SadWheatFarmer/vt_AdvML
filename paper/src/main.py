@@ -1,4 +1,28 @@
-#TODO - Create a main that will use fcts from both pys.
+'''
+File:   main.py
+Author: John Smutny
+Course: ECE-5424: Advanced Machine Learning
+Date:   11/19/2022
+Description:
+    Run data analysis of NBA Positions to visually and metrically determine
+    if the NBA is becoming more position-homogenious over time, by decade.
+
+    If desired, this program will also generate the csv file necessary to run
+    the modeling if it is necessary.
+
+    Original dataset provided by Omri Goldstein.
+    https://www.kaggle.com/datasets/drgilermo/nba-players-stats?select=Seasons_Stats.csv
+
+Input:
+    1) Season_Stats.csv - Dataset from Basketball-Reference.com's
+    'Total' and 'Advanced' data.
+    2) Players.csv - Dataset from Kaggle (same location as INPUT 1)) that
+    contains the heights and weights of all players in INPUT 1.
+
+Output:
+    Various. See each model .py file.
+'''
+
 
 import dataPreparation as dp
 import hierarchyClustering as hc
@@ -9,7 +33,39 @@ import pandas as pd
 ################
 ##########################
 
-# TODO - Consolidate the .py files so that all of the levers are in one place.
+'''
+Program Control flags and constants for operation.
+ Please customize these values to produce the outputs desired.
+
+-- Flags -- 
+DEBUG   - Simple program run. Run only one decade of information. Most 
+            commonly used for debugging purposes.
+LOAD_MODEL_DATA - Determine if the program should create the data used in 
+                    modeling (see the program's two inputs) or load an already 
+                    created .csv file from a previous run when this flag was 
+                    set to FALSE.
+                    (REQUIRES two input .csv files - see file header)
+OUTPUT_FILES_FLAG - Decide if reference DataQualityReports and other csvs for 
+                     independent validation should be created.
+INCLUDE_POS - Flag to specify if models should consider a player's 
+                Position (PG, SF, C, etc) in modeling.
+THREE_POSITION_FLAG - Specify how many positions to consider. The traditional 
+                        five positions {PG, SG, SF, PF, C} or condensed 
+                        summarized positions {G, F, C}
+                     
+-- File Paths --
+PLAYER_PATH - File path to a dataset with player height and weight
+DATA_PATH - File path to a dataset with player statistics
+
+-- Numerics and Lists --
+YEARS   - List of numeric Pairs stating what year range for a model to consider.
+DQR_NON_NUMERIC_COLUMNS - List from DATA_PATH of features that are not Numeric.
+                            (Used by the DataQualityReport class)
+REQ_GAMES - Numeric. Filter to remove players that don't play enough games
+              in a season.
+REG_MIN - Numeric. Filter to remove players that don't play enough
+               'minutes per game' in a season.
+'''
 DEBUG = False
 LOAD_MODEL_DATA = False
 
@@ -43,9 +99,9 @@ if DEBUG:
 ################
 ##########################
 
-# TODO - Decide if it makes more practical sense to have ONE csv that is
-#  loaded instead of loading one file per year-pair.
-
+'''
+** Program Execution starts HERE **
+'''
 # Load your own correctly formatted csv file to reduce computation time.
 if LOAD_MODEL_DATA:
     df_data = pd.read_csv("../data/ref/Season_Stats_MODEL_{}-{}.csv".format(

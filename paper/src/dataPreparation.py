@@ -1,40 +1,24 @@
-################################################################################
-#   File:   dataPrepration.py
-#   Author: John Smutny
-#   Course: ECE-5424: Advanced Machine Learning
-#   Date:   10/19/2022
-#   Description:
-#       Analyze and make changes to the dataset used in the NBA Position
-#       research paper. Dataset provided by Omri Goldstein.
-#       https://www.kaggle.com/datasets/drgilermo/nba-players-stats?select=Seasons_Stats.csv
-#
-#   Input:
-#       1) Season_Stats.csv - Dataset from Basketball-Reference.com 's
-#       'Total' and 'Advanced' data.
-#       2) Players.csv - Dataset from Kaggle (same location as INPUT 1)) that
-#       contains the heights and weights of all players in INPUT 1.
-#   Output:
-#       1) Season_Stats_<year1>_<year2>.csv - A csv file containing a
-#       FILTERED set of NBA players statistics for ALL years inbetween two
-#       year inputs.
-#       2) dqr_ALL_Season_Stats.csv - a DataQualityReport for every
-#       provided season of the loaded statistics before entry filtering.
-#       3) Season_Stats_<year1>-<year2>.csv - statistics of NBA Players
-#       between the specified years after filtering.
-#       4) dqr_FILTERED_Season_Stats_<year1>-<year2>.csv - DataQualityReport
-#       of data entries after filtering and inbetween the specified years.
+'''
+File:   dataPrepration.py
+Author: John Smutny
+Course: ECE-5424: Advanced Machine Learning
+Date:   11/19/2022
+Description:
+    Analyze and make changes to the dataset used in the NBA Position
+    research paper. Dataset provided by Omri Goldstein.
+    https://www.kaggle.com/datasets/drgilermo/nba-players-stats?select=Seasons_Stats.csv
 
-## Control flags and constants
-# OUTPUT_FILES - Boolean. Decide if the script should create new files.
-# PLAYER_PATH - File path to a dataset with player height and weight
-# DATA_PATH - File path to a dataset with player statistics
-# NON_NUMERIC_COLUMNS - List from DATA_PATH of features that are not Numeric.
-# REQ_GAMES - Numeric. Filter to remove players that don't play enough games
-#               in a season.
-# REG_MIN - Numeric. Filter to remove players that don't play enough
-#               'minutes per game' in a season.
-
-################################################################################
+Input:
+    1) Season_Stats.csv - Dataset from Basketball-Reference.com 's
+    'Total' and 'Advanced' data.
+    2) Players.csv - Dataset from Kaggle (same location as INPUT 1)) that
+    contains the heights and weights of all players in INPUT 1.
+Output:
+    1) Season_Stats_<year1>_<year2>.csv - A csv file containing a
+    FILTERED set of NBA players statistics for ALL years inbetween two
+    year inputs.
+    ** Only created if the LOAD_MODEL_DATA flag is set to false
+'''
 
 import pandas as pd
 import numpy as np

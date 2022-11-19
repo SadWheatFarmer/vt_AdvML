@@ -9,7 +9,6 @@
 #   Reference
 #       Dendrograms: https://wheatoncollege.edu/wp-content/uploads/2012/08/How-to-Read-a-Dendrogram-Web-Ready.pdf
 #       Hierarchical Clustering: https://joernhees.de/blog/2015/08/26/scipy-hierarchical-clustering-and-dendrogram-tutorial/
-## Control flags and constants
 ################################################################################
 
 import matplotlib.pyplot as plt
