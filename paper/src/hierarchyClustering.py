@@ -16,6 +16,10 @@ import pandas as pd
 from sklearn.preprocessing import StandardScaler, normalize
 import scipy.cluster.hierarchy as shc
 
+from sklearn.metrics import calinski_harabasz_score as C_H_score
+from sklearn.metrics import silhouette_score as S_score
+from sklearn.metrics import davies_bouldin_score as D_B_score
+
 
 def normalizeData(np_array):
     scaler = StandardScaler()
@@ -115,7 +119,7 @@ def hierarchicalClustering(df: pd.DataFrame, years: list, includePos) -> bool:
 
 
 def calcPositionConc(df: pd.DataFrame, modelName, YEARS: list) -> bool:
-    #TODO - (consider flipping rows and columns)
+    # TODO - (consider flipping rows and columns)
     ####################################
     # Calculate the position concentration in each cluster.
     #   Output files describing the player position concentrations in each
@@ -176,5 +180,71 @@ def calcPositionConc(df: pd.DataFrame, modelName, YEARS: list) -> bool:
 
 ##################################
 
+def calcSilhouetteCoefficient(df_data: pd.DataFrame, df_labels: pd.DataFrame):
+    score = S_score(df_data.to_numpy().tolist(),
+                    df_labels.to_numpy().tolist(),
+                    metric='euclidean')
+
+    return round(score, 3)
 
 
+def calcCalinskiHarabaszScore(df_data: pd.DataFrame, df_labels: pd.DataFrame):
+    score = C_H_score(df_data.to_numpy().tolist(),
+                      df_labels.to_numpy().tolist())
+
+    return round(score, 3)
+
+
+def calcDaviesBouldinIndex(df_data: pd.DataFrame, df_labels: pd.DataFrame):
+    score = D_B_score(df_data.to_numpy().tolist(),
+                      df_labels.to_numpy().tolist())
+
+    return round(score, 3)
+
+def reportClusterScores(df: pd.DataFrame, INCLUDE_POS):
+    '''
+    Various calculations of cluster tightness to judge how well the
+    clustering models worked.
+    1) Calinski-Harabasz Score: "Variance Ratio Criterion - a higher score
+                                    relates to a model with better defined
+                                    clusters."
+                                Range: [0, inf]
+    2) Silhouette Coefficient:  "higher score relates to a model with better
+                                    defined clusters."
+                                Range: [-1, 1]
+    3) Davies-Bouldin Index: "Zero is the lowest possible score. Values closer
+                                to zero indicate a better partition."
+                                Range: [0, inf]
+    REFERENCE: https://scikit-learn.org/stable/modules/clustering.html
+    
+    :param df: Input dataframe including ALL features, not just features used in
+                modeling
+    :param INCLUDE_POS: FLAG to state if a ployer's position was considered
+                in modeling
+    '''
+
+    # Drop features that were not used in modeling
+    # TODO - Need to find way to get the features of the dataset used in
+    #  modeling to this point so that only the features used in the modeling
+    #  can be used to calculate the score.
+    REMOVE_FEATURES = ['Unnamed: 0', 'ID', 'Player', 'Tm', 'Pos']
+    if INCLUDE_POS:
+        if len(df[df['Pos'] == 'G']) > 0:
+            REMOVE_FEATURES.extend(["Pos_G", "Pos_F", "Pos_C"])
+        else:
+            REMOVE_FEATURES.extend(["Pos_PG", 'Pos_SG',
+                                    "Pos_SF", "Pos_PF",
+                                    "Pos_C"])
+    REMOVE_FEATURES.extend(['Cluster'])
+
+    df_data = df.drop(columns=REMOVE_FEATURES)
+    df_labels = df['Cluster']
+
+    tightness1 = calcCalinskiHarabaszScore(df_data, df_labels)
+    print("Calinski_Harabasz_Score = {:2}".format(tightness1))
+
+    tightness2 = calcSilhouetteCoefficient(df_data, df_labels)
+    print("SilhouetteCoefficient_Score = {:2}".format(tightness2))
+
+    tightness3 = calcDaviesBouldinIndex(df_data, df_labels)
+    print("Davies-Bouldin Index = {:2}".format(tightness3))

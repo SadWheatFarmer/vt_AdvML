@@ -25,6 +25,9 @@ YEARS = [[1971, 1980],
 if DEBUG:
     YEARS = [YEARS[0]]
 
+# TODO - Decide if it makes more practical sense to have ONE csv that is
+#  loaded instead of loading one file per year-pair.
+
 for YEAR in YEARS:
     DATA_PATH = "../data/Season_Stats_{}-{}.csv".format(YEAR[0], YEAR[1])
     df_data = pd.read_csv(DATA_PATH)
@@ -36,12 +39,13 @@ for YEAR in YEARS:
         if hc.calcPositionConc(df_data, 'Hierarchy', [YEAR[0], YEAR[1]]):
             print("Model1 Position Extraction: COMPLETE")
 
+        hc.reportClusterScores(df_data, INCLUDE_POS)
+
     if SOM:
         if som(df_data, [YEAR[0], YEAR[1]], INCLUDE_POS):
             print("Model2 (SOM Clustering): COMPLETE")
 
         if hc.calcPositionConc(df_data, 'SOM', [YEAR[0], YEAR[1]]):
             print("Model2 Position Extraction: COMPLETE")
-
 
 
