@@ -58,14 +58,16 @@ def hierarchicalClustering(df: pd.DataFrame, YEARS: list,
     # to go.
     # https://docs.scipy.org/doc/scipy/reference/cluster.hierarchy.html
     numClusters = len(df['Pos'].unique())
-    clusters = shc.cut_tree(Z, n_clusters=numClusters)
+    clusters = shc.cut_tree(Z,
+                            n_clusters=numClusters)
 
     # For a specific 't' number of clusters, get a 1D vector of size=(
     # #dataPts) showing which cluster each dataPt is in. Add the cluster
     # label to the dataset.
-    labels = shc.fcluster(Z, criterion='maxclust', t=numClusters)
+    labels = shc.fcluster(Z,
+                          criterion='maxclust',
+                          t=numClusters)
     df['Cluster'] = labels
-    df_data['Cluster'] = labels
 
     ##
     # Create a visual dendrogram for the linkage data.
@@ -107,10 +109,7 @@ def hierarchicalClustering(df: pd.DataFrame, YEARS: list,
     # Evaluate the Model
     # 1) Output PIE concentration charts of the clusters
     # 2) Measure the Tightness of each cluster
-    common.calcPositionConc(df, "Hierarchy", YEARS)
-    common.reportClusterScores(df, INCLUDE_POS)
+    common.calcPositionConc(df, "Hierarchy", YEARS, THREE_POS_FLAG)
 
-    return df_data
-
-
+    return common.reportClusterScores(df, YEARS, INCLUDE_POS)
 

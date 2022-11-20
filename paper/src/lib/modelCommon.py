@@ -26,8 +26,7 @@ def normalizeData(np_array):
 
     return x_normalized
 
-def calcPositionConc(df: pd.DataFrame,
-                     MODEL_NAME, YEARS: list) -> bool:
+def calcPositionConc(df: pd.DataFrame, MODEL_NAME, YEARS: list, THREE_POS_FLAG):
     # TODO - (consider flipping rows and columns)
     ####################################
     # Calculate the position concentration in each cluster.
@@ -44,7 +43,12 @@ def calcPositionConc(df: pd.DataFrame,
     #  When INCLUDE_POS_FLAG=FALSE, avoid having the order on the pie chart
     #  be random.
     col = ['Total']
-    col.extend(df['Pos'].unique())
+
+    # Add 'pos' columns for PIE chart in a specific order.
+    if THREE_POS_FLAG:
+        col.extend(['G', 'F', 'C'])
+    else:
+        col.extend(['PG', 'SG', 'SF', 'PF', 'C'])
 
     df_conc = pd.DataFrame(columns=col)
 
@@ -90,7 +94,6 @@ def calcPositionConc(df: pd.DataFrame,
 
     print("** Model {} Position Extraction: COMPLETE".format(MODEL_NAME))
 
-    return True
 
 #========================================
 
@@ -115,7 +118,7 @@ def calcDaviesBouldinIndex(df_data: pd.DataFrame, df_labels: pd.DataFrame):
 
     return round(score, 3)
 
-def reportClusterScores(df: pd.DataFrame, INCLUDE_POS):
+def reportClusterScores(df: pd.DataFrame, YEARS: list, INCLUDE_POS):
     '''
     Various calculations of cluster tightness to judge how well the
     clustering models worked.
@@ -136,11 +139,10 @@ def reportClusterScores(df: pd.DataFrame, INCLUDE_POS):
     :param INCLUDE_POS: FLAG to state if a ployer's position was considered
                 in modeling
     '''
-    # TODO - Consider making a csv file to record each output
 
     # Drop features that were not used in modeling
     REMOVE_FEATURES = ['ID', 'Player', 'Tm', 'Pos']
-    if INCLUDE_POS:
+    if not INCLUDE_POS:
         if len(df[df['Pos'] == 'G']) > 0:
             REMOVE_FEATURES.extend(["Pos_G", "Pos_F", "Pos_C"])
         else:
@@ -161,3 +163,8 @@ def reportClusterScores(df: pd.DataFrame, INCLUDE_POS):
 
     tightness3 = calcDaviesBouldinIndex(df_data, df_labels)
     print("Davies-Bouldin Index = {:2}".format(tightness3))
+
+    return ["{}-{}".format(YEARS[0], YEARS[1]),
+            tightness1, tightness2, tightness3]
+
+

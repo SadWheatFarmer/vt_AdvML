@@ -92,7 +92,7 @@ YEARS = [[1971, 1980],
          [2011, 2020]]
 
 if DEBUG:
-    YEARS = [YEARS[0], YEARS[4]]
+    YEARS = [YEARS[0], YEARS[1]]
 
 
 ##########################
@@ -113,17 +113,40 @@ else:
                                           DQR_NON_NUMERIC_COLUMNS,
                                           OUTPUT_FILES_FLAG)
 
+# Create Cluster Metric dataframe placeholder to collect all metrics
+df_metrics_hierarchy = pd.DataFrame(columns=['Years', 'CHS', 'SC', 'DBI'])
+df_metrics_som = pd.DataFrame(columns=['Years', 'CHS', 'SC', 'DBI'])
+
 for YEAR in YEARS:
     df_year = df_data[(df_data['Year'] >= YEAR[0])
                          & (df_data['Year'] <= YEAR[1])]
 
     if HIERARCHICAL:
-        hc.hierarchicalClustering(df_year, [YEAR[0], YEAR[1]],
-                                  INCLUDE_POS, THREE_POSITION_FLAG)
-        print("\n** Model1 (Divisive Clustering): COMPLETE")
+        metrics = hc.hierarchicalClustering(df_year, [YEAR[0], YEAR[1]],
+                                            INCLUDE_POS, THREE_POSITION_FLAG)
+        df_metrics_hierarchy.loc[len(df_metrics_hierarchy)] = metrics
+        print("** Model1 (Divisive Clustering): COMPLETE\n")
 
     if SOM:
-        som(df_year, [YEAR[0], YEAR[1]],
+        metrics = som(df_year, [YEAR[0], YEAR[1]],
                       INCLUDE_POS, THREE_POSITION_FLAG)
-        print("\n** Model2 (SOM Clustering): COMPLETE")
+        df_metrics_som.loc[len(df_metrics_som)] = metrics
+        print("** Model2 (SOM Clustering): COMPLETE\n")
 
+
+df_metrics_hierarchy.to_csv(
+    '../data/output/MODEL_Metrics_Hierarchy_{}-{}.csv'.format(
+        YEARS[0][0], YEARS[len(YEARS)-1][1]),
+    index=False)
+
+df_metrics_som.to_csv(
+    '../data/output/MODEL_Metrics_som_{}-{}.csv'.format(
+        YEARS[0][0], YEARS[len(YEARS)-1][1]),
+    index=False)
+
+'''
+NOTES for later
+1. When outputting metrics for clusters for DEBUG (1971-1990) vs ALL (
+1971-2020), the metrics for overlapping years was not consistent. 
+
+'''

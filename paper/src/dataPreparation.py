@@ -221,8 +221,6 @@ def modifyData(df: pd.DataFrame, YEARS: list,
     df_oneHot_pos = pd.get_dummies(df['Pos'], prefix='Pos')
     df_oneHot_pos['ID'] = df['ID']
 
-    # TODO - Re order OneHot columns in player position size order
-
     df = pd.merge(df, df_oneHot_pos, how='left', on='ID')
 
     ##########################

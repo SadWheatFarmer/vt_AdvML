@@ -47,7 +47,10 @@ def som(df: pd.DataFrame, YEARS: list,
     x = common.normalizeData(df_data.to_numpy())
     print("Data for Model Modification: COMPLETE")
 
-    nba_som = SOM(m=len(df['Pos'].unique()), n=1, dim=len(x[0]))
+    nba_som = SOM(m=len(df['Pos'].unique()),
+                  n=1,
+                  dim=len(x[0]),
+                  random_state=2)
     nba_som.fit(x, epochs=1)
     labels = nba_som.predict(x)
 
@@ -62,8 +65,7 @@ def som(df: pd.DataFrame, YEARS: list,
     #                     years[1]),
     #                     index=False)
 
-    common.calcPositionConc(df, "SOM", YEARS)
-    common.reportClusterScores(df, INCLUDE_POS)
+    common.calcPositionConc(df, "SOM", YEARS, THREE_POS_FLAG)
 
-    return df_data
+    return common.reportClusterScores(df, YEARS, INCLUDE_POS)
 
