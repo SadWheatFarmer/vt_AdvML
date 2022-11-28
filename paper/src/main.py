@@ -67,12 +67,12 @@ REG_MIN - Numeric. Filter to remove players that don't play enough
                'minutes per game' in a season.
 '''
 DEBUG = False
-LOAD_MODEL_DATA = False
+LOAD_MODEL_DATA = True
 
 PLAYER_PATH = "../data/input/Players.csv"
 #DATA_PATH = "../data/input/Seasons_Stats.csv" #1950-2017
 DATA_PATH = "../data/input/Seasons_Stats_1950_2022.csv"  #1950-2022
-OUTPUT_FILES_FLAG = False
+OUTPUT_FILES_FLAG = True
 
 HIERARCHICAL = True
 SOM = True
