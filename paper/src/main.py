@@ -26,6 +26,7 @@ Output:
 
 import dataPreparation as dp
 import hierarchyClustering as hc
+from kMeans import runKmeans
 from som import som
 import pandas as pd
 
@@ -47,11 +48,17 @@ LOAD_MODEL_DATA - Determine if the program should create the data used in
                     (REQUIRES two input .csv files - see file header)
 OUTPUT_FILES_FLAG - Decide if reference DataQualityReports and other csvs for 
                      independent validation should be created.
+                     TRUE = output reference files to ./data/ref/
+                     
 INCLUDE_POS - Flag to specify if models should consider a player's 
                 Position (PG, SF, C, etc) in modeling.
+                TRUE = a player's position will be considered in the cluster 
+                models.
+                
 THREE_POSITION_FLAG - Specify how many positions to consider. The traditional 
                         five positions {PG, SG, SF, PF, C} or condensed 
                         summarized positions {G, F, C}
+                        TRUE = Player positions are reduced to only { G, F, C }
                      
 -- File Paths --
 PLAYER_PATH - File path to a dataset with player height and weight
@@ -70,12 +77,12 @@ DEBUG = False
 LOAD_MODEL_DATA = True
 
 PLAYER_PATH = "../data/input/Players.csv"
-#DATA_PATH = "../data/input/Seasons_Stats.csv" #1950-2017
 DATA_PATH = "../data/input/Seasons_Stats_1950_2022.csv"  #1950-2022
 OUTPUT_FILES_FLAG = True
 
 HIERARCHICAL = True
 SOM = True
+KMEANS = True
 
 REQ_GAMES = 20
 REQ_MIN = 10
@@ -113,10 +120,12 @@ else:
                                           DQR_NON_NUMERIC_COLUMNS,
                                           OUTPUT_FILES_FLAG)
 
-# Create Cluster Metric dataframe placeholder to collect all metrics
+# Create Cluster Metric dataframe placeholder to collect all metrics.
 df_metrics_hierarchy = pd.DataFrame(columns=['Years', 'CHS', 'SC', 'DBI'])
 df_metrics_som = pd.DataFrame(columns=['Years', 'CHS', 'SC', 'DBI'])
+df_metrics_kMeans = pd.DataFrame(columns=['Years', 'CHS', 'SC', 'DBI'])
 
+# Begin modeling for each set of year-pairs specified.
 for YEAR in YEARS:
     df_year = df_data[(df_data['Year'] >= YEAR[0])
                          & (df_data['Year'] <= YEAR[1])]
@@ -133,7 +142,13 @@ for YEAR in YEARS:
         df_metrics_som.loc[len(df_metrics_som)] = metrics
         print("** Model2 (SOM Clustering): COMPLETE\n")
 
+    if KMEANS:
+        metrics = runKmeans(df_year, [YEAR[0], YEAR[1]],
+                            INCLUDE_POS, THREE_POSITION_FLAG)
+        df_metrics_kMeans.loc[len(df_metrics_kMeans)] = metrics
+        print("** Model3 (SOM KMeans): COMPLETE\n")
 
+# Output the resulting cluster metrics to individual .csv files.
 df_metrics_hierarchy.to_csv(
     '../data/output/MODEL_Metrics_Hierarchy_{}-{}.csv'.format(
         YEARS[0][0], YEARS[len(YEARS)-1][1]),
@@ -141,6 +156,11 @@ df_metrics_hierarchy.to_csv(
 
 df_metrics_som.to_csv(
     '../data/output/MODEL_Metrics_som_{}-{}.csv'.format(
+        YEARS[0][0], YEARS[len(YEARS)-1][1]),
+    index=False)
+
+df_metrics_kMeans.to_csv(
+    '../data/output/MODEL_Metrics_kMeans_{}-{}.csv'.format(
         YEARS[0][0], YEARS[len(YEARS)-1][1]),
     index=False)
 

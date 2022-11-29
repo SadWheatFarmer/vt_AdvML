@@ -26,8 +26,15 @@ def normalizeData(np_array):
 
     return x_normalized
 
+
+def runPCA(df: pd.DataFrame) -> pd.DataFrame:
+    # TODO - Place code to run PCA here
+    print("**** Apply PCA to data. Data Reduction")
+
+
 def calcPositionConc(df: pd.DataFrame, MODEL_NAME, YEARS: list, THREE_POS_FLAG):
-    # TODO - (consider flipping rows and columns)
+    # TODO - Consider making the PIE charts 3 positions no matter what to
+    #  simplify interpretation.
     ####################################
     # Calculate the position concentration in each cluster.
     #   Output files describing the player position concentrations in each
@@ -52,10 +59,10 @@ def calcPositionConc(df: pd.DataFrame, MODEL_NAME, YEARS: list, THREE_POS_FLAG):
 
     df_conc = pd.DataFrame(columns=col)
 
-    # i = cluster #
+    # i = cluster # (1-5)
     # j = specific position
     fig, ax = plt.subplots(nrows=1, ncols=len(df['Pos'].unique()), squeeze=True)
-    for i in range(1, len(col[1:])+1):
+    for i in range(0, len(col[1:])):
         df_x = df[df['Cluster'] == i]
         count = [len(df_x)]
 
@@ -166,5 +173,43 @@ def reportClusterScores(df: pd.DataFrame, YEARS: list, INCLUDE_POS):
 
     return ["{}-{}".format(YEARS[0], YEARS[1]),
             tightness1, tightness2, tightness3]
+
+
+def combinePlayers():
+    '''
+    Run this function once on an already established dataset of player
+    statistics gathered from various sources.
+
+    INPUTS:
+    1) Players.csv - Original Player biography information from kaggle user
+                        drgilermo.
+                    https://www.kaggle.com/datasets/drgilermo/nba-players
+                    -stats?select=Players.csv
+    2) Players_PENDING.xlsx - Hand gathered data from
+                                www.basketball-reference.com containing player
+                                Height, Weight and other background
+                                information. Height/Weight are extracted by
+                                year. Each sheet in the .xlsx file is a
+                                different year.
+    '''
+
+    PATH1 = "../data/input/Players.csv"
+    PATH2 = "../data/input/Players_PENDING.xlsx"
+
+    YEARS = ['2018', '2019', '2020', '2021', '2022']
+    year = YEARS[0]
+
+
+    df_p1 = pd.read_csv(PATH1)
+
+    names = ['name', 'Height', 'Weight']
+    df_p2 = pd.read_excel(PATH2, sheet_name=year, usecols='B,D:E')
+    df_p2 = df_p2.rename(columns={'Name': 'Player',
+                                  'Height': 'height',
+                                  'Weight': 'weight'})
+
+    df_p1 = df_p1.join(df_p2.set_index('Player'), on='Player')
+
+    df_p1.to_csv('../data/input/Players_1950_2022.csv')
 
 

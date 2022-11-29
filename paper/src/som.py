@@ -54,17 +54,14 @@ def som(df: pd.DataFrame, YEARS: list,
     nba_som.fit(x, epochs=1)
     labels = nba_som.predict(x)
 
-    # Ensure that all labels are corrected to be in range [1, 5]
-    labels = labels + 1
+    # Ensure that all labels are corrected to be in range [0, 4]
+    labels = labels
     df['Cluster'] = labels
 
-    # Isolate positions per player in the clusters
-    # df_cluster = df[['ID', 'Year', 'Player', 'Pos', 'Cluster']]
-    # df_cluster.to_csv("../output/MODEL_Labels_SOM_{}-{}.csv".format(
-    #                     years[0],
-    #                     years[1]),
-    #                     index=False)
-
+    #####################################
+    # Evaluate the Model
+    # 1) Output PIE concentration charts of the clusters
+    # 2) Measure the Tightness of each cluster
     common.calcPositionConc(df, "SOM", YEARS, THREE_POS_FLAG)
 
     return common.reportClusterScores(df, YEARS, INCLUDE_POS)

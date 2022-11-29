@@ -318,12 +318,12 @@ def initialDataModification(PLAYER_PATH, DATA_PATH,
     df_data = combineData(df_players, df_stats)
 
     # Process data using indicated constraints for ONLY the relevant years.
-    YEARS = [YEARS_PAIRS[0][0], YEARS_PAIRS[len(YEARS_PAIRS)-1][1]]
-    df_model = modifyData(df_data, YEARS, REQ_GAMES, REQ_MIN,
+    YEAR_RANGE = [YEARS_PAIRS[0][0], YEARS_PAIRS[len(YEARS_PAIRS)-1][1]]
+    df_model = modifyData(df_data, YEAR_RANGE, REQ_GAMES, REQ_MIN,
                           THREE_POSITION_FLAG)
 
     df_model.to_csv("../data/ref/Season_Stats_MODEL_{}-{}.csv".format(
-                    YEARS_PAIRS[0][0], YEARS_PAIRS[len(YEARS_PAIRS) - 1][1]),
+                    YEAR_RANGE[0], YEAR_RANGE[1]),
                     index=False)
 
     # IF DESIRED, output various DQR and csv files about the data.

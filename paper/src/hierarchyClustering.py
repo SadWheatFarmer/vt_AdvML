@@ -67,7 +67,9 @@ def hierarchicalClustering(df: pd.DataFrame, YEARS: list,
     labels = shc.fcluster(Z,
                           criterion='maxclust',
                           t=numClusters)
-    df['Cluster'] = labels
+
+    # Ensure that all labels are corrected to be in range [0, 4]
+    df['Cluster'] = labels - 1
 
     ##
     # Create a visual dendrogram for the linkage data.
@@ -97,13 +99,6 @@ def hierarchicalClustering(df: pd.DataFrame, YEARS: list,
 
     c, coph_dists = cophenet(Z, pdist(x))
     print("Cophenetic Correlation Coefficient: {:.5f}".format(c))
-
-    # Isolate positions per player in the clusters
-    # df_cluster = df[['ID', 'Year', 'Player', 'Pos', 'Cluster']]
-    # df_cluster.to_csv("../output/MODEL_Labels_Hierarchy_{}-{}.csv".format(
-    #                     years[0],
-    #                     years[1]),
-    #                     index=False)
 
     #####################################
     # Evaluate the Model
