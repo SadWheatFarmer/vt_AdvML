@@ -112,7 +112,8 @@ if DEBUG:
 # Load your own correctly formatted csv file to reduce computation time.
 if LOAD_MODEL_DATA:
     df_data = pd.read_csv("../data/ref/Season_Stats_MODEL_{}-{}.csv".format(
-                            YEARS[0][0], YEARS[len(YEARS)-1][1]))
+                            YEARS[0][0], YEARS[len(YEARS)-1][1]),
+                            index_col=False)
 else:
     df_data = dp.initialDataModification(PLAYER_PATH, DATA_PATH, YEARS,
                                           REQ_GAMES, REQ_MIN,
