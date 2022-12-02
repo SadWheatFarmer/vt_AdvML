@@ -107,6 +107,69 @@ def removeDuplicates(df: pd.DataFrame) -> pd.DataFrame:
     return df
 
 
+def modifyNanValues(df: pd.DataFrame,
+                    NAN_LIMIT,
+                    YEARS_PAIRS: list) -> pd.DataFrame:
+    '''
+    Replace all NaN values contained in the dataset with numeric values. The
+    dataset's NaN values are handled for each year range so all adjustments.
+    Values in the inputted dataset are replaced based on the indices sliced
+    by the inputted list of year_pairs.
+    would not affect a different year range.
+    :param df: full ALL years dataset.
+    :param NAN_LIMIT: The maximum amount of NaN values allowed until the
+                        entire feature is made the same value.
+    :return: full ALL years dataset.
+    '''
+
+    count = 0
+    KEY_FEATURES = ['3P', '3PA', '3P%', 'FT%']
+
+    # loop through each feature by year range. Based on how many Nan values
+    # there are, change the Nan values.
+    for YEARS in YEARS_PAIRS:
+        df_year = df.loc[(df["Year"] >= YEARS[0]) & (df["Year"] <= YEARS[1])]
+
+        for col in df.columns:
+            nanCount = df_year[col].isnull().sum()
+
+            '''
+            Three situations:
+            1) A column has significant Nan values, but its not in a commonly 
+            Nan feature where Nan is shorthand for zero. Then replace all values 
+            of that feature with -1 for that specific year range.
+            2) A column has significant Nan values for features where Nan is 
+            shorthand for zero. Then replace all Nan values with zero.
+            3) A column has non-zero amount of Nan values. Then replace the Nan 
+            values with the median value of the feature.
+            '''
+            if nanCount / len(df_year[col]) > NAN_LIMIT and \
+                    col not in KEY_FEATURES:
+                print("***** Replace column {} with a value of -1 for "
+                      "years {}-{}.".format(col, YEARS[0], YEARS[1]))
+
+                df.loc[df_year.index, col] = -1
+                count = count + nanCount
+
+            elif nanCount / len(df_year[col]) > NAN_LIMIT and \
+                    col in KEY_FEATURES:
+                df.loc[df_year.index, col] = \
+                    df.loc[df_year.index, col].replace(np.nan,
+                                                       df_year[col].median())
+                count = count + nanCount
+
+            elif nanCount != 0:
+                df.loc[df_year.index, col] = \
+                    df.loc[df_year.index, col].replace(np.nan,
+                                                       df_year[col].median())
+                count = count + nanCount
+
+            else:
+                continue
+
+    print("**** Data Modification: Remove NaN values - COMPLETE\t {} ({:.2}%) "
+          "values effected.".format(count, count/(len(df)*len(df.columns))))
+
 def cleanPositionFeature(df: pd.DataFrame, THREE_POSITIONS_FLAG) -> pd.DataFrame:
     '''
     1) Only let a player have one position.
@@ -154,7 +217,8 @@ def cleanPositionFeature(df: pd.DataFrame, THREE_POSITIONS_FLAG) -> pd.DataFrame
 
     return df
 
-def modifyData(df: pd.DataFrame, YEARS: list,
+
+def modifyData(df: pd.DataFrame, YEARS_PAIRS: list,
                REQ_GAMES, REQ_MIN,
                THREE_POSITIONS_FLAG) -> \
         pd.DataFrame:
@@ -171,14 +235,14 @@ def modifyData(df: pd.DataFrame, YEARS: list,
             Player must have played at least y minutes per game played.
     '''
 
-    print("*** Data Modification {}-{}: START".format(YEARS[0], YEARS[1]))
+    YEARS = [YEARS_PAIRS[0][0], YEARS_PAIRS[len(YEARS_PAIRS)-1][1]]
+    print("** Data Modification {}-{}: START".format(YEARS[0], YEARS[1]))
 
     ##########################
     # Initial Player Filter
 
     # 1) Year filter
     df = df[(df['Year'] >= YEARS[0]) & (df['Year'] <= YEARS[1])]
-
 
     ##########################
     # Feature Cleanup
@@ -199,19 +263,7 @@ def modifyData(df: pd.DataFrame, YEARS: list,
 
     ##########################
     # Remove nan features if over a criteria
-    NAN_LIMIT = 0.3
-    for col in df.columns:
-        nanCount = df[col].isnull().sum()
-        if nanCount/len(df[col]) > NAN_LIMIT and\
-                col not in ['GS', '3P', '3PA', '3P%', 'FT%']:
-            print("**** Delete column {} with "
-                  "{:.2f}% nan values".format(col, nanCount/len(df[col])*100))
-            df = df.drop([col], axis=1)
-        elif nanCount:
-            df[col] = df[col].replace(np.nan, df[col].median())
-        else:
-            continue
-    print("**** Data Modification: Remove NaN Features - COMPLETE")
+    df = modifyNanValues(df, 0.3, YEARS_PAIRS)
 
     ##########################
     # Ensure 'Position' feature has only 3 or 5 categories if included.
@@ -318,12 +370,12 @@ def initialDataModification(PLAYER_PATH, DATA_PATH,
     df_data = combineData(df_players, df_stats)
 
     # Process data using indicated constraints for ONLY the relevant years.
-    YEAR_RANGE = [YEARS_PAIRS[0][0], YEARS_PAIRS[len(YEARS_PAIRS)-1][1]]
-    df_model = modifyData(df_data, YEAR_RANGE, REQ_GAMES, REQ_MIN,
+
+    df_model = modifyData(df_data, YEARS_PAIRS, REQ_GAMES, REQ_MIN,
                           THREE_POSITION_FLAG)
 
     df_model.to_csv("../data/ref/Season_Stats_MODEL_{}-{}.csv".format(
-                    YEAR_RANGE[0], YEAR_RANGE[1]),
+                    YEARS_PAIRS[0][0], YEARS_PAIRS[len(YEARS_PAIRS) - 1][1]),
                     index=False)
 
     # IF DESIRED, output various DQR and csv files about the data.
