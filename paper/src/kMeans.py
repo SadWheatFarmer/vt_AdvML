@@ -29,7 +29,7 @@ def modifyDataForModel(df: pd.DataFrame,
     REMOVE_FEATURES = ['ID', 'Year', 'Player', 'Tm', 'Pos']
 
     # Also delete position features if they should not be used in modeling.
-    if ~INCLUDE_POS_FLAG:
+    if not INCLUDE_POS_FLAG:
         if THREE_POS_FLAG:
             REMOVE_FEATURES.extend(["Pos_G", "Pos_F", "Pos_C"])
         else:
@@ -54,7 +54,11 @@ def runKmeans(df: pd.DataFrame, YEARS: list, INCLUDE_POS, THREE_POS_FLAG) -> boo
     num_clusters = len(df['Pos'].unique())
 
     print(pd.DataFrame(X).head())
-    kmeans = KMeans(n_clusters=num_clusters, init='k-means++', max_iter=300, n_init=10, random_state=0)
+    kmeans = KMeans(n_clusters=num_clusters,
+                    init='k-means++',
+                    max_iter=300,
+                    n_init=10,
+                    random_state=0)
     pred_y = kmeans.fit_predict(X)
 
     print(X[:,0])
@@ -73,7 +77,7 @@ def runKmeans(df: pd.DataFrame, YEARS: list, INCLUDE_POS, THREE_POS_FLAG) -> boo
     #plt.show()
 
     # Ensure that all labels are corrected to be in range [0, 4]
-    df['Cluster'] = pred_y
+    df.loc[:, 'Cluster'] = pred_y
 
     common.calcPositionConc(df, "kMeans", YEARS, THREE_POS_FLAG)
 

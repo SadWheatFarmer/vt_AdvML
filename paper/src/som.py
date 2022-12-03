@@ -26,7 +26,7 @@ def modifyDataForModel(df: pd.DataFrame,
     REMOVE_FEATURES = ['ID', 'Year', 'Player', 'Tm', 'Pos']
 
     # Also delete position features if they should not be used in modeling.
-    if ~INCLUDE_POS_FLAG:
+    if not INCLUDE_POS_FLAG:
         if THREE_POS_FLAG:
             REMOVE_FEATURES.extend(["Pos_G", "Pos_F", "Pos_C"])
         else:
@@ -56,7 +56,7 @@ def som(df: pd.DataFrame, YEARS: list,
 
     # Ensure that all labels are corrected to be in range [0, 4]
     labels = labels
-    df['Cluster'] = labels
+    df.loc[:, 'Cluster'] = labels
 
     #####################################
     # Evaluate the Model

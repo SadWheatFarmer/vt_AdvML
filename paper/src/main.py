@@ -128,8 +128,8 @@ df_metrics_kMeans = pd.DataFrame(columns=['Years', 'CHS', 'SC', 'DBI'])
 
 # Begin modeling for each set of year-pairs specified.
 for YEAR in YEARS:
-    df_year = df_data[(df_data['Year'] >= YEAR[0])
-                         & (df_data['Year'] <= YEAR[1])]
+    df_year = df_data.loc[(df_data['Year'] >= YEAR[0]) &
+                          (df_data['Year'] <= YEAR[1])]
 
     if HIERARCHICAL:
         metrics = hc.hierarchicalClustering(df_year, [YEAR[0], YEAR[1]],

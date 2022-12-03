@@ -357,13 +357,13 @@ def modifyData(df: pd.DataFrame, YEARS_PAIRS: list,
     count = 0
 
     # 2) Game filter
-    count = df[(df['G'] >= REQ_GAMES)]
+    count = len(df[(df['G'] >= REQ_GAMES)])
     df = df[(df['G'] >= REQ_GAMES)]
     print("**** Data Modification: GAME Filter - COMPLETE\t {}"
           " ({:.2}%) values effected.".format(count, count / len(df)))
 
     # 3) Time filter
-    count = df[(df['MP'] >= REQ_GAMES * REQ_MIN)]
+    count = len(df[(df['MP'] >= REQ_GAMES * REQ_MIN)])
     df = df[(df['MP'] >= REQ_GAMES * REQ_MIN)]
     print("**** Data Modification: MINUTES Filter - COMPLETE\t {} ({:.2}%) "
           "values effected.".format(count, count / len(df)))
@@ -400,16 +400,12 @@ def outputReferenceFiles(df_RAW: pd.DataFrame, df_MODEL: pd.DataFrame,
     report_raw.to_csv(OUTPUT_PATH_RAW)
 
     ##############################
-    # Output a .csv and a Data Quality Report for the data used in modeling
+    # Output a Data Quality Report for the data used in modeling
     OUTPUT_PATH_DQR = OUTPUT_PATH + "Season_Stats_dqr_MODEL_{}-{}.csv".format(
         YEARS_PAIRS[0][0], YEARS_PAIRS[len(YEARS_PAIRS)-1][1])
     report_raw = DataQualityReport()
     report_raw.quickDQR(df_MODEL, df_MODEL.columns, NON_NUMERIC_COLUMNS)
     report_raw.to_csv(OUTPUT_PATH_DQR)
-
-    OUTPUT_PATH_MODEL = OUTPUT_PATH + "Season_Stats_MODEL_{}-{}.csv".format(
-        YEARS_PAIRS[0][0], YEARS_PAIRS[len(YEARS_PAIRS)-1][1])
-    df_MODEL.to_csv(OUTPUT_PATH_MODEL)
 
     ##############################
     # Output a DataQualityReport and dataset for each Year-Pair
