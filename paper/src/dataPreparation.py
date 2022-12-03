@@ -27,6 +27,141 @@ from lib.DataQualityReport import DataQualityReport
 
 ##############################
 
+def combineDuplicates(df: pd.DataFrame, df_matches: pd.DataFrame) -> \
+        pd.DataFrame:
+    STATIC_COLUMNS = ['ID', 'Year', 'Player', 'height', 'weight', 'Age', 'Pos', 'Tm']
+    SUM_COLUMNS = ['G', 'GS', 'MP',  'OWS', 'DWS', 'WS', 'ORB', 'DRB', 'TRB',
+                   'FG', 'FGA', 'AST', 'STL', 'BLK', 'TOV', 'PF', 'PTS', '3P',
+                   '3PA', '2P', '2PA', 'FT', 'FTA']
+    AVG_COLUMNS = ['PER', 'TS%', '3PAr', 'FTr', 'ORB%', 'DRB%', 'TRB%',
+                   'AST%', 'STL%', 'BLK%', 'TOV%', 'USG%', 'WS/48', 'OBPM',
+                   'DBPM', 'BPM', 'VORP', 'FG%', '3P%', '2P%', 'eFG%', 'FT%']
+
+    indicies = df_matches.index
+
+    # For each feature, ether SUM or AVG all the data entries.
+    for feature in df.columns:
+        # Loop through each found player entry. Make a list of
+        # values.
+        vals = []
+        if feature in STATIC_COLUMNS:
+            continue
+        else:
+            for i in indicies[:]:
+                vals.append(
+                    df_matches[df_matches['ID'] == i][feature].iat[0])
+
+            if feature in SUM_COLUMNS:
+                val = sum(vals)
+            elif feature in AVG_COLUMNS:
+                val = sum(vals) / len(vals)
+            else:
+                break
+
+            # Sanity Check. Replace the value if result doesn't
+            # make any sense.
+            # 1) Apply the collective value
+            # 2) or do not make any modification due to data
+            # weirdness.
+
+            if feature in ['G', 'GS']:
+                # Cap the number of games to the max in a regular season
+                if val > 82:
+                    val = 82
+
+            df.at[indicies[0], feature] = val
+
+    # Delete non-first entries
+    df = df.drop(indicies[1:])
+
+    return df
+
+
+def removeDuplicates2(df: pd.DataFrame) -> pd.DataFrame:
+    '''
+    Look through data for identically named players in the same year and
+    average their entries statistics so that there is one entry per year per
+    player.
+    There could be multiple entries for one player if that player switches
+    teams over the course of the same year.
+
+    :param df: Input dataframe of the overall data
+    :return: Pandas Dataframe with combined data entries
+    '''
+
+    # Count of entries effected by this process
+    count = 0
+
+    # loop through all present years. Adjustments are continued in each year.
+    for year in df['Year'].unique():
+        df_oneYear = df[df['Year'] == year]
+
+        # Isolate every unique player name. Does not guarantee a unique player.
+        for name in df_oneYear['Player'].unique():
+
+            # Only attempt to combine entries if a player entry is unique
+            if df_oneYear['Player'].value_counts()[name] == 1:
+                continue
+            # Mark players as unique individuals by matching name, age, and pos
+            else:
+                df_nameMatch = df_oneYear[df_oneYear['Player'] == name]
+
+                # Checks to see if there are more than one player that has
+                # the same name but multiple entries.
+                if (len(df_nameMatch['Age'].unique()) == 1 and
+                        len(df_nameMatch['weight'].unique()) == 1 and
+                        len(df_nameMatch['Pos'].unique()) == 1):
+                    df = combineDuplicates(df, df_nameMatch)
+                    count = count + len(df_nameMatch.index[1:])
+
+                # Continue to refine the player. Same name but different markers
+                else:
+                    for age in df_nameMatch['Age'].unique():
+                        df_ageMatch = df_nameMatch[df_nameMatch['Age'] == age]
+
+                        # Matched player hase the same name, age, and weight.
+                        # Therefore, the player(s) is only one person.
+                        if len(df_ageMatch['weight'].unique()) == 1:
+                            df = combineDuplicates(df, df_ageMatch)
+                            count = count + len(df_ageMatch.index[1:])
+
+                        # Matched player(s) have the same name and age but
+                        # have a different weight. Therefore, they are different
+                        # people.
+                        else:
+                            for weight in df_ageMatch['weight'].unique():
+                                df_wMatch= df_ageMatch['weight'] == weight
+
+                                if len(df_wMatch['weight'].unique()) == 1:
+                                    df = combineDuplicates(df, df_wMatch)
+
+                                # Weird circumstance. Combine players
+                                else:
+                                    print("****** ::replaceDuplicates() - "
+                                          "Weird case {}".format(name))
+                                    df.loc[:, df_wMatch.index] = \
+                                        combineDuplicates(
+                                            df_wMatch)
+
+                                count = count + len(df_ageMatch.index[1:])
+
+                                # TODO - Further refinement is the 1971 case
+                                #  (Len Chappell - ID3105) where a player has
+                                #  same name, age, weight but played a
+                                #  different position on another team.
+                                #  FIX: Compare the number of games played (
+                                #  'G'), sum/avg the entries and make the
+                                #  player 'pos' the one that is most played.
+                                #  Could involve choosing which is the
+                                #  destination entry so that the pos-feature
+                                #  OneHotEncoding isn't effected.
+
+    print("**** Data Modification: removeDuplicates - COMPLETE\t {} ({:.2}%) "
+          "values effected.".format(count, count/(len(df))))
+
+    return df
+
+
 def removeDuplicates(df: pd.DataFrame) -> pd.DataFrame:
     '''
     Look through data for identically named players in the same year and
@@ -46,6 +181,9 @@ def removeDuplicates(df: pd.DataFrame) -> pd.DataFrame:
     AVG_COLUMNS = ['PER', 'TS%', '3PAr', 'FTr', 'ORB%', 'DRB%', 'TRB%',
                    'AST%', 'STL%', 'BLK%', 'TOV%', 'USG%', 'WS/48', 'OBPM',
                    'DBPM', 'BPM', 'VORP', 'FG%', '3P%', '2P%', 'eFG%', 'FT%']
+
+    # Count of entries effected by this process
+    count = 0
 
     # loop through all present years. Adjustments are continued in each year.
     for year in df['Year'].unique():
@@ -97,12 +235,15 @@ def removeDuplicates(df: pd.DataFrame) -> pd.DataFrame:
                 # Delete non-first entries
                 df = df.drop(indicies[1:])
 
+                count = count + len(indicies[1:])
+
 
             # If there is only one player data entry, do not do anything.
             else:
                 continue
 
-    print("**** Data Modification: removeDuplicates - COMPLETE")
+    print("**** Data Modification: removeDuplicates - COMPLETE\t {} ({:.2}%) "
+          "values effected.".format(count, count/(len(df)*len(df.columns))))
 
     return df
 
@@ -140,8 +281,9 @@ def modifyNanValues(df: pd.DataFrame,
             of that feature with -1 for that specific year range.
             2) A column has significant Nan values for features where Nan is 
             shorthand for zero. Then replace all Nan values with zero.
-            3) A column has non-zero amount of Nan values. Then replace the Nan 
-            values with the median value of the feature.
+            3) A column has non-zero amount of Nan values but less than the 
+            NanLimit. Then replace the Nan values with the median value of 
+            the feature.
             '''
             if nanCount / len(df_year[col]) > NAN_LIMIT and \
                     col not in KEY_FEATURES:
@@ -170,7 +312,11 @@ def modifyNanValues(df: pd.DataFrame,
     print("**** Data Modification: Remove NaN values - COMPLETE\t {} ({:.2}%) "
           "values effected.".format(count, count/(len(df)*len(df.columns))))
 
-def cleanPositionFeature(df: pd.DataFrame, THREE_POSITIONS_FLAG) -> pd.DataFrame:
+    return df
+
+
+def cleanPositionFeature(df: pd.DataFrame, THREE_POSITIONS_FLAG) -> \
+        pd.DataFrame:
     '''
     1) Only let a player have one position.
            Only take the first position before a '-' character.
@@ -188,32 +334,50 @@ def cleanPositionFeature(df: pd.DataFrame, THREE_POSITIONS_FLAG) -> pd.DataFrame
     :return: Dataframe with updated 'Position' feature.
     '''
 
+    count = 0
+
     for id in df['ID']:
+        pos = df.loc[id, 'Pos']
+
         # 1) In each entry, only use the first position listed if a player is
         # listed with multiple positions. Ex: PG-SG, F-C, G-F, etc
         pos = df.loc[id, 'Pos']
         dash_position = pos.find('-')
 
         # If found dash char '-' is not found (-1) then do nothing
+        # Cases
+        #   Dash Position == 1 when position is listed as F-C
+        #   Dash Position == 2 when position is listed as SG-SF
         if dash_position == 1:
             pos = pos[:1]
+            count = count + 1
         elif dash_position == 2:
             pos = pos[:2]
+            count = count + 1
 
         # 2) Only allow 3 or 5 cardinality for the 'position' feature
         if THREE_POSITIONS_FLAG:
             if pos == 'PG' or pos == 'SG':
                 pos = 'G'
+                count = count + 1
             elif pos == 'SF' or pos == 'PF':
                 pos = 'F'
+                count = count + 1
         else:
             if pos == 'G':
                 pos = 'SG'
+                count = count + 1
             elif pos == 'F':
                 pos = 'SF'
+                count = count + 1
 
         # Set the resulting position categorical.
         df.loc[id, 'Pos'] = pos
+
+
+    print("**** Data Modification: Clean Player Position - COMPLETE\t {}"
+          " ({:.2}%) values effected.".format(count,
+                                              count/(len(df)*len(df.columns))))
 
     return df
 
@@ -258,16 +422,16 @@ def modifyData(df: pd.DataFrame, YEARS_PAIRS: list,
     df = df[~pd.isna(df['Player'])]
 
     ##########################
+    # Ensure 'Position' feature has only 3 or 5 categories if included.
+    df = cleanPositionFeature(df, THREE_POSITIONS_FLAG)
+
+    ##########################
     # Consolidate any entries that are listed more than once.
-    df = removeDuplicates(df)
+    df = removeDuplicates2(df)
 
     ##########################
     # Remove nan features if over a criteria
     df = modifyNanValues(df, 0.3, YEARS_PAIRS)
-
-    ##########################
-    # Ensure 'Position' feature has only 3 or 5 categories if included.
-    df = cleanPositionFeature(df, THREE_POSITIONS_FLAG)
 
     # Add in One-Hot Encoding 'Pos' feature values.
     df_oneHot_pos = pd.get_dummies(df['Pos'], prefix='Pos')
@@ -277,11 +441,19 @@ def modifyData(df: pd.DataFrame, YEARS_PAIRS: list,
 
     ##########################
     # Specific Player Filters
+    count = 0
 
     # 2) Game filter
+    count = df[(df['G'] >= REQ_GAMES)]
     df = df[(df['G'] >= REQ_GAMES)]
+    print("**** Data Modification: GAME Filter - COMPLETE\t {}"
+          " ({:.2}%) values effected.".format(count, count / len(df)))
+
     # 3) Time filter
+    count = df[(df['MP'] >= REQ_GAMES * REQ_MIN)]
     df = df[(df['MP'] >= REQ_GAMES * REQ_MIN)]
+    print("**** Data Modification: MINUTES Filter - COMPLETE\t {} ({:.2}%) "
+          "values effected.".format(count, count / len(df)))
 
     print("*** Data Modification {}-{}: COMPLETE".format(YEARS[0], YEARS[1]))
 
