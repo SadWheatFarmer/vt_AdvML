@@ -77,7 +77,7 @@ def combineDuplicates(df: pd.DataFrame, df_matches: pd.DataFrame) -> \
     return df
 
 
-def removeDuplicates2(df: pd.DataFrame) -> pd.DataFrame:
+def removeDuplicates(df: pd.DataFrame) -> pd.DataFrame:
     '''
     Look through data for identically named players in the same year and
     average their entries statistics so that there is one entry per year per
@@ -158,92 +158,6 @@ def removeDuplicates2(df: pd.DataFrame) -> pd.DataFrame:
 
     print("**** Data Modification: removeDuplicates - COMPLETE\t {} ({:.2}%) "
           "values effected.".format(count, count/(len(df))))
-
-    return df
-
-
-def removeDuplicates(df: pd.DataFrame) -> pd.DataFrame:
-    '''
-    Look through data for identically named players in the same year and
-    average their entries statistics so that there is one entry per year per
-    player.
-    There could be multiple entries for one player if that player switches
-    teams over the course of the same year.
-
-    :param df: Input dataframe of the overall data
-    :return: Pandas Dataframe with combined data entries
-    '''
-
-    STATIC_COLUMNS = ['ID', 'Year', 'Player', 'height', 'weight', 'Age', 'Pos', 'Tm']
-    SUM_COLUMNS = ['G', 'GS', 'MP',  'OWS', 'DWS', 'WS', 'ORB', 'DRB', 'TRB',
-                   'FG', 'FGA', 'AST', 'STL', 'BLK', 'TOV', 'PF', 'PTS', '3P',
-                   '3PA', '2P', '2PA', 'FT', 'FTA']
-    AVG_COLUMNS = ['PER', 'TS%', '3PAr', 'FTr', 'ORB%', 'DRB%', 'TRB%',
-                   'AST%', 'STL%', 'BLK%', 'TOV%', 'USG%', 'WS/48', 'OBPM',
-                   'DBPM', 'BPM', 'VORP', 'FG%', '3P%', '2P%', 'eFG%', 'FT%']
-
-    # Count of entries effected by this process
-    count = 0
-
-    # loop through all present years. Adjustments are continued in each year.
-    for year in df['Year'].unique():
-        df_oneYear = df[df['Year'] == year]
-        for name in df_oneYear['Player'].unique():
-
-            # Sum data entries if a player's name occurs more than once in a
-            # season.
-            if df_oneYear['Player'].value_counts()[name] > 1:
-                indicies = df_oneYear[df_oneYear['Player'] == name].index
-
-                # For each feature, ether SUM or AVG all the data entries.
-                for feature in df.columns:
-                    # Loop through each found player entry. Make a list of
-                    # values.
-                    vals = []
-                    if feature in STATIC_COLUMNS:
-                        continue
-                    else:
-                        for i in indicies[:]:
-                            vals.append(
-                                df_oneYear[df_oneYear['ID'] == i][feature].iat[0])
-
-                        if feature in SUM_COLUMNS:
-                            val = sum(vals)
-                        elif feature in AVG_COLUMNS:
-                            val = sum(vals) / len(vals)
-                        else:
-                            break
-
-                        # Sanity Check. Replace the value if result doesn't
-                        # make any sense.
-                        # 1) Apply the collective value
-                        # 2) or do not make any modification due to data
-                        # weirdness.
-                        replaceValue = False
-                        if feature in ['G', 'GS']:
-                            if val <= 82:
-                                replaceValue = True
-                            else:
-                                replaceValue = True
-                                val = 82
-                        else:
-                            replaceValue = True
-
-                        if replaceValue:
-                            df.at[indicies[0], feature] = val
-
-                # Delete non-first entries
-                df = df.drop(indicies[1:])
-
-                count = count + len(indicies[1:])
-
-
-            # If there is only one player data entry, do not do anything.
-            else:
-                continue
-
-    print("**** Data Modification: removeDuplicates - COMPLETE\t {} ({:.2}%) "
-          "values effected.".format(count, count/(len(df)*len(df.columns))))
 
     return df
 
@@ -341,7 +255,6 @@ def cleanPositionFeature(df: pd.DataFrame, THREE_POSITIONS_FLAG) -> \
 
         # 1) In each entry, only use the first position listed if a player is
         # listed with multiple positions. Ex: PG-SG, F-C, G-F, etc
-        pos = df.loc[id, 'Pos']
         dash_position = pos.find('-')
 
         # If found dash char '-' is not found (-1) then do nothing
@@ -427,7 +340,7 @@ def modifyData(df: pd.DataFrame, YEARS_PAIRS: list,
 
     ##########################
     # Consolidate any entries that are listed more than once.
-    df = removeDuplicates2(df)
+    df = removeDuplicates(df)
 
     ##########################
     # Remove nan features if over a criteria
