@@ -26,7 +26,7 @@ def modifyDataForModel(df: pd.DataFrame,
                        INCLUDE_POS_FLAG, THREE_POS_FLAG) -> pd.DataFrame:
 
     # Remove Features
-    REMOVE_FEATURES = ['ID', 'Player', 'Tm', 'Pos']
+    REMOVE_FEATURES = ['ID', 'Year', 'Player', 'Tm', 'Pos']
 
     # Also delete position features if they should not be used in modeling.
     if ~INCLUDE_POS_FLAG:
