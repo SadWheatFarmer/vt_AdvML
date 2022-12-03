@@ -63,6 +63,7 @@ def calcPositionConc(df: pd.DataFrame, MODEL_NAME, YEARS: list, THREE_POS_FLAG):
     # j = specific position
     fig, ax = plt.subplots(nrows=1, ncols=len(df['Pos'].unique()), squeeze=True)
     for i in range(0, len(col[1:])):
+        plotOffset = i + 1
         df_x = df[df['Cluster'] == i]
         count = [len(df_x)]
 
@@ -72,11 +73,11 @@ def calcPositionConc(df: pd.DataFrame, MODEL_NAME, YEARS: list, THREE_POS_FLAG):
         # Publish Pie chart of concentrations
         # TIP - Use the hyperparameter 'autopct='%.1f'' to print values.
         # TODO - Do better styling https://www.pythoncharts.com/matplotlib/pie-chart-matplotlib/
-        ax[i-1].set_title("Cluster {}".format(i))
+        ax[plotOffset-1].set_title("Cluster {}".format(i))
         if i == 1:
-            ax[i-1].pie(count[1:], labels=col[1:], normalize=True)
+            ax[plotOffset-1].pie(count[1:], labels=col[1:], normalize=True)
         else:
-            ax[i-1].pie(count[1:], normalize=True)
+            ax[plotOffset-1].pie(count[1:], normalize=True)
 
         # Save the concentrations to publish a .csv
         df_conc = df_conc.append(

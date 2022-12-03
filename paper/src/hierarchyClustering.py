@@ -86,6 +86,8 @@ def hierarchicalClustering(df: pd.DataFrame, YEARS: list,
                         get_leaves=True
                         )
 
+    ax = plt.gca()
+    ax.tick_params(axis='x', which='major', labelsize=8)
     plt.legend('Separation of NBA Players {}-{}'.format(YEARS[0], YEARS[1]))
     plt.savefig('../model/Hierarchy_Dendrogram_{}-{}'.format(YEARS[0],
                                                              YEARS[1]))
