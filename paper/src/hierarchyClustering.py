@@ -14,6 +14,7 @@
 import matplotlib.pyplot as plt
 import pandas as pd
 import scipy.cluster.hierarchy as shc
+from pca import pcaTransform
 
 import lib.modelCommon as common
 
@@ -38,12 +39,15 @@ def modifyDataForModel(df: pd.DataFrame,
 
 
 def hierarchicalClustering(df: pd.DataFrame, YEARS: list,
-                           INCLUDE_POS, THREE_POS_FLAG):
+                           INCLUDE_POS, THREE_POS_FLAG, APPLY_PCA: bool = False, VARIANCE: int = 5):
     print("---- Start Hierarchy Clustering model ----")
 
     df_data = modifyDataForModel(df, INCLUDE_POS, THREE_POS_FLAG)
     x = common.normalizeData(df_data.to_numpy())
     print("** Data for Model Modification: COMPLETE")
+
+    if APPLY_PCA:
+        x = pcaTransform(x, VARIANCE)
 
     # see documentation for different cluster methodologies
     # { single, complete, average, weighted, centroid, median, ward }

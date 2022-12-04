@@ -1,5 +1,5 @@
 '''
-File:   kMeans.py
+File:   pca.py
 Author: Jason Cusati
 Course: ECE-5424: Advanced Machine Learning
 Date:   11/28/2022
@@ -49,23 +49,26 @@ def createElbowPlots(mod_data: pd.DataFrame, X, YEARS: list):
                                                        dpi=100))
 
 
-
-def runPCA(df: pd.DataFrame, YEARS: list, INCLUDE_POS, THREE_POS_FLAG,
-           VARIANCE):
-
-    mod_data = modifydataformodel(df, INCLUDE_POS, THREE_POS_FLAG)
-
+def pcaTransform(df: pd.DataFrame, VARIANCE: int) -> pd.DataFrame:
     scaler = StandardScaler()
-    X = scaler.fit_transform(mod_data)
-
-    # Identify optimal PCA components through Elbow Plots beforehand.
-    createElbowPlots(mod_data, X, YEARS)
+    X = scaler.fit_transform(df)
 
     # Perform PCA on transformed dataset by using components with a
     # percentage of the explained dataset variance.
     pca = PCA(n_components=VARIANCE)
     pca.fit(X)
     X_transform = pca.transform(X)
+    return X_transform
+
+def runPCA(df: pd.DataFrame, YEARS: list, INCLUDE_POS, THREE_POS_FLAG,
+           VARIANCE):
+
+    mod_data = modifydataformodel(df, INCLUDE_POS, THREE_POS_FLAG)
+
+    # Identify optimal PCA components through Elbow Plots beforehand.
+    createElbowPlots(mod_data, X, YEARS)
+
+    X_transform = pcaTransform(mod_data, VARIANCE)
 
     print(
         "explained variance ratio by Components: {:.2f}%"
