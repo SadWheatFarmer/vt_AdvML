@@ -8,20 +8,21 @@ Description:
 '''
 
 import pandas as pd
-import paper.src.lib.modelCommon as common
+import lib.modelCommon as common
 from sklearn.decomposition import PCA
 import matplotlib.pyplot as plt
 from sklearn.cluster import KMeans
 from sklearn.preprocessing import StandardScaler
+import numpy as np
 
 
 def modifydataformodel(df: pd.DataFrame,
                        INCLUDE_POS_FLAG, THREE_POS_FLAG) -> pd.DataFrame:
     # Remove Features
-    REMOVE_FEATURES = ['ID', 'Player', 'Tm', 'Pos']
+    REMOVE_FEATURES = ['ID', 'Year', 'Player', 'Tm', 'Pos']
 
     # Also delete position features if they should not be used in modeling.
-    if ~INCLUDE_POS_FLAG:
+    if not INCLUDE_POS_FLAG:
         if THREE_POS_FLAG:
             REMOVE_FEATURES.extend(["Pos_G", "Pos_F", "Pos_C"])
         else:
@@ -33,19 +34,44 @@ def modifydataformodel(df: pd.DataFrame,
 
     return df
 
+def createElbowPlots(mod_data: pd.DataFrame, X, YEARS: list):
 
-def runPCA(df: pd.DataFrame, YEARS: list, INCLUDE_POS, THREE_POS_FLAG) -> bool:
+    pca = PCA(n_components=len(mod_data.columns))
+    pca.fit(X)
+
+    # Display the Elbow Plot explaining the optimal # of PCA components
+    plt.figure()
+    plt.plot(np.cumsum(pca.explained_variance_ratio_))
+    plt.xlabel('Number of PCA Components')
+    plt.ylabel('Explained Variance')
+    plt.savefig('../model/Elbow_Plot_PCA-{}-{}.png'.format(YEARS[0],
+                                                       YEARS[1],
+                                                       dpi=100))
+
+
+
+def runPCA(df: pd.DataFrame, YEARS: list, INCLUDE_POS, THREE_POS_FLAG,
+           VARIANCE):
+
     mod_data = modifydataformodel(df, INCLUDE_POS, THREE_POS_FLAG)
+
     scaler = StandardScaler()
     X = scaler.fit_transform(mod_data)
-    num_clusters = len(df['Pos'].unique())
-    pca = PCA(n_components=num_clusters)
+
+    # Identify optimal PCA components through Elbow Plots beforehand.
+    createElbowPlots(mod_data, X, YEARS)
+
+    # Perform PCA on transformed dataset by using components with a
+    # percentage of the explained dataset variance.
+    pca = PCA(n_components=VARIANCE)
     pca.fit(X)
     X_transform = pca.transform(X)
 
     print(
-        "explained variance ratio: %s"
-        % str(pca.explained_variance_ratio_)
+        "explained variance ratio by Components: {:.2f}%"
+            "\n\tComponent (0-100%): {}".format(
+            sum(pca.explained_variance_ratio_*100),
+            pca.explained_variance_ratio_*100)
     )
 
     plt.figure()
@@ -54,10 +80,18 @@ def runPCA(df: pd.DataFrame, YEARS: list, INCLUDE_POS, THREE_POS_FLAG) -> bool:
 
     y = df['Pos']
     target_names = df['Pos'].unique()
+    # TODO - Try the best you can to order the positions in order.
+    #  ['PG', 'SG', 'SF', 'PF', 'C']
 
-    for color, i, target_name in zip(colors, ['C', 'SF', 'PG', 'SG', 'PF'], target_names):
-        plt.scatter(
-            X_transform[y == i, 0], X_transform[y == i, 1], color=color, alpha=0.8, lw=lw, label=target_name
+    for color, i, target_name in zip(colors,
+                                     ['PG', 'SG', 'SF', 'PF', 'C'],
+                                     target_names):
+        plt.scatter(  X_transform[y == i, 0],
+                      X_transform[y == i, 1],
+                      color=color,
+                      alpha=0.8,
+                      lw=lw,
+                      label=target_name
         )
     plt.legend(loc="best", shadow=False, scatterpoints=1)
     plt.title("PCA of NBA dataset")
@@ -65,17 +99,19 @@ def runPCA(df: pd.DataFrame, YEARS: list, INCLUDE_POS, THREE_POS_FLAG) -> bool:
                 "PCA",
                 YEARS[0],
                 YEARS[1]))
-    print("Transform: %s:"
-          % str(X_transform))
-    print(
-        "Components: %s"
-        % pca.components_)
+    #print("Transform: %s:" % str(X_transform))
+    #print("Components: %s" % pca.components_)
 
-    kmeans = KMeans(n_clusters=num_clusters, init='k-means++', max_iter=300, n_init=10, random_state=0)
+    # Perform cluster modeling on the resulting PCA components
+    num_clusters = len(df['Pos'].unique())
+    kmeans = KMeans(n_clusters=num_clusters,
+                    init='k-means++',
+                    max_iter=300,
+                    n_init=10,
+                    random_state=0)
     pred_y = kmeans.fit_predict(X_transform)
+    df.loc[:, 'Cluster'] = pred_y
 
-    df['Cluster'] = pred_y
-
-    common.calcPositionConc(df, "Hierarchy", YEARS, THREE_POS_FLAG)
+    common.calcPositionConc(df, "PCA", YEARS, THREE_POS_FLAG)
 
     return common.reportClusterScores(df, YEARS, INCLUDE_POS)

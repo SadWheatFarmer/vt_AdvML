@@ -40,7 +40,7 @@ def modifyDataForModel(df: pd.DataFrame,
 
 
 def som(df: pd.DataFrame, YEARS: list,
-        INCLUDE_POS, THREE_POS_FLAG) -> bool:
+        INCLUDE_POS, THREE_POS_FLAG):
     print("---- Start SOM Clustering model ----")
 
     df_data = modifyDataForModel(df, INCLUDE_POS, THREE_POS_FLAG)

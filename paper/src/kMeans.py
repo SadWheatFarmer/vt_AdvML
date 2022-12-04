@@ -42,7 +42,7 @@ def modifyDataForModel(df: pd.DataFrame,
     return df
 
 
-def runKmeans(df: pd.DataFrame, YEARS: list, INCLUDE_POS, THREE_POS_FLAG) -> bool:
+def runKmeans(df: pd.DataFrame, YEARS: list, INCLUDE_POS, THREE_POS_FLAG):
 
     print(df.head())
     mod_data = modifyDataForModel(df, INCLUDE_POS, THREE_POS_FLAG)

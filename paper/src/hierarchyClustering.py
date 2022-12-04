@@ -38,7 +38,7 @@ def modifyDataForModel(df: pd.DataFrame,
 
 
 def hierarchicalClustering(df: pd.DataFrame, YEARS: list,
-                           INCLUDE_POS, THREE_POS_FLAG) -> bool:
+                           INCLUDE_POS, THREE_POS_FLAG):
     print("---- Start Hierarchy Clustering model ----")
 
     df_data = modifyDataForModel(df, INCLUDE_POS, THREE_POS_FLAG)

@@ -83,7 +83,7 @@ OUTPUT_FILES_FLAG = True
 HIERARCHICAL = True
 SOM = True
 KMEANS = True
-PCAMODEL = True
+PCA = True
 
 REQ_GAMES = 20
 REQ_MIN = 10
@@ -150,11 +150,11 @@ for YEAR in YEARS:
         df_metrics_kMeans.loc[len(df_metrics_kMeans)] = metrics
         print("** Model3 (SOM KMeans): COMPLETE\n")
 
-    if PCAMODEL:
+    if PCA:
         metrics = runPCA(df_year, [YEAR[0], YEAR[1]],
-                         INCLUDE_POS, THREE_POSITION_FLAG)
+                         INCLUDE_POS, THREE_POSITION_FLAG, 0.7)
         df_metrics_pca.loc[len(df_metrics_pca)] = metrics
-        print("** Model3 (PCA): COMPLETE\n")
+        print("** Model4 (PCA): COMPLETE\n")
 
 # Output the resulting cluster metrics to individual .csv files.
 df_metrics_hierarchy.to_csv(
