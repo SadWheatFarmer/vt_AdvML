@@ -123,9 +123,10 @@ else:
 
 # Create Cluster Metric dataframe placeholder to collect all metrics.
 df_metrics_hierarchy = pd.DataFrame(columns=['Years', 'CHS', 'SC', 'DBI'])
+df_metrics_hierarchy_pca = pd.DataFrame(columns=['Years', 'CHS', 'SC', 'DBI'])
 df_metrics_som = pd.DataFrame(columns=['Years', 'CHS', 'SC', 'DBI'])
 df_metrics_kMeans = pd.DataFrame(columns=['Years', 'CHS', 'SC', 'DBI'])
-df_metrics_pca = pd.DataFrame(columns=['Years', 'CHS', 'SC', 'DBI'])
+df_metrics_kMeans_pca = pd.DataFrame(columns=['Years', 'CHS', 'SC', 'DBI'])
 
 # Begin modeling for each set of year-pairs specified.
 for YEAR in YEARS:
@@ -136,6 +137,11 @@ for YEAR in YEARS:
         metrics = hc.hierarchicalClustering(df_year, [YEAR[0], YEAR[1]],
                                             INCLUDE_POS, THREE_POSITION_FLAG)
         df_metrics_hierarchy.loc[len(df_metrics_hierarchy)] = metrics
+        print("** Model1 (Divisive Clustering): COMPLETE\n")
+
+        metrics = hc.hierarchicalClustering(df_year, [YEAR[0], YEAR[1]],
+                                            INCLUDE_POS, THREE_POSITION_FLAG, True, 5)
+        df_metrics_hierarchy_pca.loc[len(df_metrics_hierarchy_pca)] = metrics
         print("** Model1 (Divisive Clustering): COMPLETE\n")
 
     if SOM:
@@ -153,11 +159,16 @@ for YEAR in YEARS:
     if PCA:
         metrics = runPCA(df_year, [YEAR[0], YEAR[1]],
                          INCLUDE_POS, THREE_POSITION_FLAG, 0.7)
-        df_metrics_pca.loc[len(df_metrics_pca)] = metrics
+        df_metrics_kMeans_pca.loc[len(df_metrics_kMeans_pca)] = metrics
         print("** Model4 (PCA): COMPLETE\n")
 
 # Output the resulting cluster metrics to individual .csv files.
 df_metrics_hierarchy.to_csv(
+    '../data/output/MODEL_Metrics_Hierarchy_{}-{}.csv'.format(
+        YEARS[0][0], YEARS[len(YEARS) - 1][1]),
+    index=False)
+
+df_metrics_hierarchy_pca.to_csv(
     '../data/output/MODEL_Metrics_Hierarchy_{}-{}.csv'.format(
         YEARS[0][0], YEARS[len(YEARS) - 1][1]),
     index=False)
@@ -172,8 +183,8 @@ df_metrics_kMeans.to_csv(
         YEARS[0][0], YEARS[len(YEARS) - 1][1]),
     index=False)
 
-df_metrics_pca.to_csv(
-    '../data/output/MODEL_Metrics_pca_{}-{}.csv'.format(
+df_metrics_kMeans_pca.to_csv(
+    '../data/output/MODEL_Metrics_kMeans_pca_{}-{}.csv'.format(
         YEARS[0][0], YEARS[len(YEARS) - 1][1]),
     index=False)
 

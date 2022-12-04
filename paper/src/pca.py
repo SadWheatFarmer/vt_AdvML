@@ -57,6 +57,13 @@ def pcaTransform(df: pd.DataFrame, VARIANCE: int) -> pd.DataFrame:
     # percentage of the explained dataset variance.
     pca = PCA(n_components=VARIANCE)
     pca.fit(X)
+    print(
+        "explained variance ratio by Components: {:.2f}%"
+            "\n\tComponent (0-100%): {}".format(
+            sum(pca.explained_variance_ratio_*100),
+            pca.explained_variance_ratio_*100)
+    )
+
     X_transform = pca.transform(X)
     return X_transform
 
@@ -65,17 +72,13 @@ def runPCA(df: pd.DataFrame, YEARS: list, INCLUDE_POS, THREE_POS_FLAG,
 
     mod_data = modifydataformodel(df, INCLUDE_POS, THREE_POS_FLAG)
 
+    scaler = StandardScaler()
+    X = scaler.fit_transform(mod_data)
+
     # Identify optimal PCA components through Elbow Plots beforehand.
     createElbowPlots(mod_data, X, YEARS)
 
-    X_transform = pcaTransform(mod_data, VARIANCE)
-
-    print(
-        "explained variance ratio by Components: {:.2f}%"
-            "\n\tComponent (0-100%): {}".format(
-            sum(pca.explained_variance_ratio_*100),
-            pca.explained_variance_ratio_*100)
-    )
+    X_transform = pcaTransform(X, VARIANCE)
 
     plt.figure()
     colors = ["navy", "turquoise", "darkorange", "darkgreen", "maroon"]
