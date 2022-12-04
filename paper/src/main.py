@@ -23,10 +23,10 @@ Output:
     Various. See each model .py file.
 '''
 
-
 import dataPreparation as dp
 import hierarchyClustering as hc
 from kMeans import runKmeans
+from pca import runPCA
 from som import som
 import pandas as pd
 
@@ -77,12 +77,13 @@ DEBUG = False
 LOAD_MODEL_DATA = True
 
 PLAYER_PATH = "../data/input/Players.csv"
-DATA_PATH = "../data/input/Seasons_Stats_1950_2022.csv"  #1950-2022
+DATA_PATH = "../data/input/Seasons_Stats_1950_2022.csv"  # 1950-2022
 OUTPUT_FILES_FLAG = True
 
 HIERARCHICAL = True
 SOM = True
 KMEANS = True
+PCAMODEL = True
 
 REQ_GAMES = 20
 REQ_MIN = 10
@@ -101,7 +102,6 @@ YEARS = [[1971, 1980],
 if DEBUG:
     YEARS = [YEARS[0], YEARS[1]]
 
-
 ##########################
 ################
 ##########################
@@ -112,19 +112,20 @@ if DEBUG:
 # Load your own correctly formatted csv file to reduce computation time.
 if LOAD_MODEL_DATA:
     df_data = pd.read_csv("../data/ref/Season_Stats_MODEL_{}-{}.csv".format(
-                            YEARS[0][0], YEARS[len(YEARS)-1][1]),
-                            index_col=False)
+        YEARS[0][0], YEARS[len(YEARS) - 1][1]),
+        index_col=False)
 else:
     df_data = dp.initialDataModification(PLAYER_PATH, DATA_PATH, YEARS,
-                                          REQ_GAMES, REQ_MIN,
-                                          THREE_POSITION_FLAG,
-                                          DQR_NON_NUMERIC_COLUMNS,
-                                          OUTPUT_FILES_FLAG)
+                                         REQ_GAMES, REQ_MIN,
+                                         THREE_POSITION_FLAG,
+                                         DQR_NON_NUMERIC_COLUMNS,
+                                         OUTPUT_FILES_FLAG)
 
 # Create Cluster Metric dataframe placeholder to collect all metrics.
 df_metrics_hierarchy = pd.DataFrame(columns=['Years', 'CHS', 'SC', 'DBI'])
 df_metrics_som = pd.DataFrame(columns=['Years', 'CHS', 'SC', 'DBI'])
 df_metrics_kMeans = pd.DataFrame(columns=['Years', 'CHS', 'SC', 'DBI'])
+df_metrics_pca = pd.DataFrame(columns=['Years', 'CHS', 'SC', 'DBI'])
 
 # Begin modeling for each set of year-pairs specified.
 for YEAR in YEARS:
@@ -149,20 +150,31 @@ for YEAR in YEARS:
         df_metrics_kMeans.loc[len(df_metrics_kMeans)] = metrics
         print("** Model3 (SOM KMeans): COMPLETE\n")
 
+    if PCAMODEL:
+        metrics = runPCA(df_year, [YEAR[0], YEAR[1]],
+                         INCLUDE_POS, THREE_POSITION_FLAG)
+        df_metrics_pca.loc[len(df_metrics_pca)] = metrics
+        print("** Model3 (PCA): COMPLETE\n")
+
 # Output the resulting cluster metrics to individual .csv files.
 df_metrics_hierarchy.to_csv(
     '../data/output/MODEL_Metrics_Hierarchy_{}-{}.csv'.format(
-        YEARS[0][0], YEARS[len(YEARS)-1][1]),
+        YEARS[0][0], YEARS[len(YEARS) - 1][1]),
     index=False)
 
 df_metrics_som.to_csv(
     '../data/output/MODEL_Metrics_som_{}-{}.csv'.format(
-        YEARS[0][0], YEARS[len(YEARS)-1][1]),
+        YEARS[0][0], YEARS[len(YEARS) - 1][1]),
     index=False)
 
 df_metrics_kMeans.to_csv(
     '../data/output/MODEL_Metrics_kMeans_{}-{}.csv'.format(
-        YEARS[0][0], YEARS[len(YEARS)-1][1]),
+        YEARS[0][0], YEARS[len(YEARS) - 1][1]),
+    index=False)
+
+df_metrics_pca.to_csv(
+    '../data/output/MODEL_Metrics_pca_{}-{}.csv'.format(
+        YEARS[0][0], YEARS[len(YEARS) - 1][1]),
     index=False)
 
 '''
