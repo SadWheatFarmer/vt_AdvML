@@ -169,7 +169,7 @@ df_metrics_hierarchy.to_csv(
     index=False)
 
 df_metrics_hierarchy_pca.to_csv(
-    '../data/output/MODEL_Metrics_Hierarchy_{}-{}.csv'.format(
+    '../data/output/MODEL_Metrics_Hierarchy_pca_{}-{}.csv'.format(
         YEARS[0][0], YEARS[len(YEARS) - 1][1]),
     index=False)
 
