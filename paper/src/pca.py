@@ -9,11 +9,11 @@ Description:
 
 import pandas as pd
 import lib.modelCommon as common
-from sklearn.decomposition import PCA
+
 import matplotlib.pyplot as plt
 from sklearn.cluster import KMeans
 from sklearn.preprocessing import StandardScaler
-import numpy as np
+
 
 
 def modifydataformodel(df: pd.DataFrame,
@@ -34,41 +34,9 @@ def modifydataformodel(df: pd.DataFrame,
 
     return df
 
-def createElbowPlots(mod_data: pd.DataFrame, X, YEARS: list):
-
-    pca = PCA(n_components=len(mod_data.columns))
-    pca.fit(X)
-
-    # Display the Elbow Plot explaining the optimal # of PCA components
-    plt.figure()
-    plt.plot(np.cumsum(pca.explained_variance_ratio_))
-    plt.xlabel('Number of PCA Components')
-    plt.ylabel('Explained Variance')
-    plt.savefig('../model/Elbow_Plot_PCA-{}-{}.png'.format(YEARS[0],
-                                                       YEARS[1],
-                                                       dpi=100))
-
-
-def pcaTransform(df: pd.DataFrame, VARIANCE: int) -> pd.DataFrame:
-    scaler = StandardScaler()
-    X = scaler.fit_transform(df)
-
-    # Perform PCA on transformed dataset by using components with a
-    # percentage of the explained dataset variance.
-    pca = PCA(n_components=VARIANCE)
-    pca.fit(X)
-    print(
-        "explained variance ratio by Components: {:.2f}%"
-            "\n\tComponent (0-100%): {}".format(
-            sum(pca.explained_variance_ratio_*100),
-            pca.explained_variance_ratio_*100)
-    )
-
-    X_transform = pca.transform(X)
-    return X_transform
 
 def runPCA(df: pd.DataFrame, YEARS: list, INCLUDE_POS, THREE_POS_FLAG,
-           VARIANCE):
+           VARIANCE: float):
 
     mod_data = modifydataformodel(df, INCLUDE_POS, THREE_POS_FLAG)
 
@@ -76,9 +44,11 @@ def runPCA(df: pd.DataFrame, YEARS: list, INCLUDE_POS, THREE_POS_FLAG,
     X = scaler.fit_transform(mod_data)
 
     # Identify optimal PCA components through Elbow Plots beforehand.
-    createElbowPlots(mod_data, X, YEARS)
+    common.createElbowPlots(len(mod_data.columns), X, YEARS)
 
-    X_transform = pcaTransform(X, VARIANCE)
+    # Reduce the data's dimensionality to a number of components that explain
+    # a portion of the dataset's variance.
+    X_transform = common.pcaTransform(X, VARIANCE)
 
     plt.figure()
     colors = ["navy", "turquoise", "darkorange", "darkgreen", "maroon"]

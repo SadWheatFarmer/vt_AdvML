@@ -40,11 +40,16 @@ def modifyDataForModel(df: pd.DataFrame,
 
 
 def som(df: pd.DataFrame, YEARS: list,
-        INCLUDE_POS, THREE_POS_FLAG):
+        INCLUDE_POS, THREE_POS_FLAG,
+        APPLY_PCA: bool, VARIANCE: float):
     print("---- Start SOM Clustering model ----")
 
     df_data = modifyDataForModel(df, INCLUDE_POS, THREE_POS_FLAG)
     x = common.normalizeData(df_data.to_numpy())
+
+    if APPLY_PCA:
+        x = common.pcaTransform(x, VARIANCE)
+
     print("Data for Model Modification: COMPLETE")
 
     nba_som = SOM(m=len(df['Pos'].unique()),
