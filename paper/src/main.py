@@ -88,15 +88,6 @@ PCA_kMEANS = False
 PCA = True
 VARIANCE_THRESHOLD = 0.85
 
-# TODO - Work on Jason's commit
-#   1. Apply the PCA flag as 'whether you want PCA or not' to the 3 models.
-#   2. Get rid of the VARIANCE hardcodes
-#   3. Move Jason's 'runPCA()' and 'pcaTransform()' functions to common.
-#   4. Extract results and figures
-#
-#   If time
-#   5. Make PIE charts bar charts
-
 REQ_GAMES = 20
 REQ_MIN = 10
 INCLUDE_POS = False
