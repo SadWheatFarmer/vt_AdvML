@@ -13,6 +13,8 @@ Description:
 import matplotlib.pyplot as plt
 import pandas as pd
 from sklearn.preprocessing import StandardScaler, normalize
+from sklearn.decomposition import PCA
+import numpy as np
 
 from sklearn.metrics import calinski_harabasz_score as C_H_score
 from sklearn.metrics import silhouette_score as S_score
@@ -27,9 +29,39 @@ def normalizeData(np_array):
     return x_normalized
 
 
-def runPCA(df: pd.DataFrame) -> pd.DataFrame:
-    # TODO - Place code to run PCA here
-    print("**** Apply PCA to data. Data Reduction")
+def createElbowPlots(numFeatures: int, X, YEARS: list):
+    print("**** Generate an Elbow Plot showing the data reduction curve.")
+    pca = PCA(n_components=numFeatures)
+    pca.fit(X)
+
+    # Display the Elbow Plot explaining the optimal # of PCA components
+    plt.figure()
+    plt.plot(np.cumsum(pca.explained_variance_ratio_))
+    plt.xlabel('Number of PCA Components')
+    plt.ylabel('Explained Variance (%)')
+    plt.savefig('../model/ref/Elbow_Plot_PCA-{}-{}.png'.format(YEARS[0],
+                                                       YEARS[1],
+                                                       dpi=100))
+
+
+def pcaTransform(df: pd.DataFrame, VARIANCE: int) -> pd.DataFrame:
+    print("*** Apply PCA: Data Reduction")
+    scaler = StandardScaler()
+    X = scaler.fit_transform(df)
+
+    # Perform PCA on transformed dataset by using components with a
+    # percentage of the explained dataset variance.
+    pca = PCA(n_components=VARIANCE)
+    pca.fit(X)
+    print(
+        "explained variance ratio by Components: {:.2f}%"
+            "\n\tComponent (0-100%): {}".format(
+            sum(pca.explained_variance_ratio_*100),
+            pca.explained_variance_ratio_*100)
+    )
+
+    X_transform = pca.transform(X)
+    return X_transform
 
 
 def calcPositionConc(df: pd.DataFrame, MODEL_NAME, YEARS: list, THREE_POS_FLAG):
@@ -85,7 +117,7 @@ def calcPositionConc(df: pd.DataFrame, MODEL_NAME, YEARS: list, THREE_POS_FLAG):
                         ignore_index=True)
 
     # Publish the resulting concentrations
-    df_conc.to_csv("../model/CONC_{}_Season_Stats_{}-{}.csv".format(
+    df_conc.to_csv("../model/ref/CONC_{}_Season_Stats_{}-{}.csv".format(
         MODEL_NAME,
         YEARS[0],
         YEARS[1]))

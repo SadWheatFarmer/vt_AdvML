@@ -42,18 +42,19 @@ def modifyDataForModel(df: pd.DataFrame,
     return df
 
 
-def runKmeans(df: pd.DataFrame, YEARS: list, INCLUDE_POS, THREE_POS_FLAG, APPLY_PCA: bool = False, VARIANCE: int = 5):
-
-    #print(df.head())
+def runKmeans(df: pd.DataFrame, YEARS: list, INCLUDE_POS, THREE_POS_FLAG,
+              APPLY_PCA: bool, VARIANCE: float):
+    print("---- Start kMeans Clustering model ----")
     mod_data = modifyDataForModel(df, INCLUDE_POS, THREE_POS_FLAG)
+    X = common.normalizeData(mod_data.to_numpy())
 
-    #print(mod_data.head())
-    scaler = StandardScaler()
-    X = scaler.fit_transform(mod_data)
+    if APPLY_PCA:
+        common.createElbowPlots(len(mod_data.columns), X, YEARS)
+        X = common.pcaTransform(X, VARIANCE)
+
+    print("** Data for Model Modification: COMPLETE")
 
     num_clusters = len(df['Pos'].unique())
-
-    #print(pd.DataFrame(X).head())
     kmeans = KMeans(n_clusters=num_clusters,
                     init='k-means++',
                     max_iter=300,
@@ -64,7 +65,6 @@ def runKmeans(df: pd.DataFrame, YEARS: list, INCLUDE_POS, THREE_POS_FLAG, APPLY_
     #print(X[:,0])
     print("Inertia:\t")
     print(kmeans.inertia_)
-    labels = kmeans.predict(X)
 
     print ("Clusters (result of k-means)")
     print (collections.Counter(pred_y))
@@ -73,8 +73,11 @@ def runKmeans(df: pd.DataFrame, YEARS: list, INCLUDE_POS, THREE_POS_FLAG, APPLY_
     print (collections.Counter(df['Pos']))
     plt.figure(figsize=(10, 6))
     plt.scatter(df['Pos'], X[:,1])
-    plt.scatter(kmeans.cluster_centers_[:, 0], kmeans.cluster_centers_[:, 1], s=300, c='red')
-    plt.show()
+    plt.scatter(kmeans.cluster_centers_[:, 0],
+                kmeans.cluster_centers_[:, 1],
+                s=300,
+                c='red')
+    #plt.show()
 
     # Ensure that all labels are corrected to be in range [0, 4]
     df.loc[:, 'Cluster'] = pred_y

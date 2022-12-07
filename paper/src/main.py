@@ -83,11 +83,14 @@ OUTPUT_FILES_FLAG = True
 HIERARCHICAL = True
 SOM = True
 KMEANS = True
+PCA_kMEANS = False
+
 PCA = True
+VARIANCE_THRESHOLD = 0.85
 
 REQ_GAMES = 20
 REQ_MIN = 10
-INCLUDE_POS = True
+INCLUDE_POS = False
 THREE_POSITION_FLAG = False
 
 DQR_NON_NUMERIC_COLUMNS = ['Unnamed: 0', 'Player', 'Tm', 'Pos',
@@ -123,7 +126,6 @@ else:
 
 # Create Cluster Metric dataframe placeholder to collect all metrics.
 df_metrics_hierarchy = pd.DataFrame(columns=['Years', 'CHS', 'SC', 'DBI'])
-df_metrics_hierarchy_pca = pd.DataFrame(columns=['Years', 'CHS', 'SC', 'DBI'])
 df_metrics_som = pd.DataFrame(columns=['Years', 'CHS', 'SC', 'DBI'])
 df_metrics_kMeans = pd.DataFrame(columns=['Years', 'CHS', 'SC', 'DBI'])
 df_metrics_kMeans_pca = pd.DataFrame(columns=['Years', 'CHS', 'SC', 'DBI'])
@@ -135,41 +137,36 @@ for YEAR in YEARS:
 
     if HIERARCHICAL:
         metrics = hc.hierarchicalClustering(df_year, [YEAR[0], YEAR[1]],
-                                            INCLUDE_POS, THREE_POSITION_FLAG)
+                                            INCLUDE_POS,
+                                            THREE_POSITION_FLAG,
+                                            PCA, VARIANCE_THRESHOLD)
         df_metrics_hierarchy.loc[len(df_metrics_hierarchy)] = metrics
-        print("** Model1 (Divisive Clustering): COMPLETE\n")
-
-        metrics = hc.hierarchicalClustering(df_year, [YEAR[0], YEAR[1]],
-                                            INCLUDE_POS, THREE_POSITION_FLAG, True, 5)
-        df_metrics_hierarchy_pca.loc[len(df_metrics_hierarchy_pca)] = metrics
         print("** Model1 (Divisive Clustering): COMPLETE\n")
 
     if SOM:
         metrics = som(df_year, [YEAR[0], YEAR[1]],
-                      INCLUDE_POS, THREE_POSITION_FLAG)
+                      INCLUDE_POS, THREE_POSITION_FLAG,
+                      PCA, VARIANCE_THRESHOLD)
         df_metrics_som.loc[len(df_metrics_som)] = metrics
         print("** Model2 (SOM Clustering): COMPLETE\n")
 
     if KMEANS:
         metrics = runKmeans(df_year, [YEAR[0], YEAR[1]],
-                            INCLUDE_POS, THREE_POSITION_FLAG)
+                            INCLUDE_POS, THREE_POSITION_FLAG,
+                            PCA, VARIANCE_THRESHOLD)
         df_metrics_kMeans.loc[len(df_metrics_kMeans)] = metrics
-        print("** Model3 (SOM KMeans): COMPLETE\n")
+        print("** Model3 (KMeans): COMPLETE\n")
 
-    if PCA:
+    if PCA_kMEANS:
         metrics = runPCA(df_year, [YEAR[0], YEAR[1]],
-                         INCLUDE_POS, THREE_POSITION_FLAG, 0.7)
+                         INCLUDE_POS, THREE_POSITION_FLAG,
+                         VARIANCE_THRESHOLD)
         df_metrics_kMeans_pca.loc[len(df_metrics_kMeans_pca)] = metrics
-        print("** Model4 (PCA): COMPLETE\n")
+        print("** Model4 (PCA KMeans): COMPLETE\n")
 
 # Output the resulting cluster metrics to individual .csv files.
 df_metrics_hierarchy.to_csv(
     '../data/output/MODEL_Metrics_Hierarchy_{}-{}.csv'.format(
-        YEARS[0][0], YEARS[len(YEARS) - 1][1]),
-    index=False)
-
-df_metrics_hierarchy_pca.to_csv(
-    '../data/output/MODEL_Metrics_Hierarchy_pca_{}-{}.csv'.format(
         YEARS[0][0], YEARS[len(YEARS) - 1][1]),
     index=False)
 
