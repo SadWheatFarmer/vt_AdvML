@@ -155,12 +155,10 @@ for YEAR in YEARS:
         print("** Model2 (SOM Clustering): COMPLETE\n")
 
     if KMEANS:
-        for i in range(1, 11):
-            print(f"** Model3 (KMeans): RUN kMeans with {i} clusters \n")
-            metrics = kMeans.runKmeans(df_year, [YEAR[0], YEAR[1]],
-                                       INCLUDE_POS, THREE_POSITION_FLAG,
-                                       PCA, VARIANCE_THRESHOLD, i, kmeans_inertia)
-            df_metrics_kMeans.loc[len(df_metrics_kMeans)] = metrics
+        metrics = kMeans.runKmeans(df_year, [YEAR[0], YEAR[1]],
+                                   INCLUDE_POS, THREE_POSITION_FLAG,
+                                   PCA, VARIANCE_THRESHOLD)
+        df_metrics_kMeans.loc[len(df_metrics_kMeans)] = metrics
 
         print("** Model3 (KMeans): COMPLETE\n")
 

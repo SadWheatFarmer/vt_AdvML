@@ -41,58 +41,9 @@ def modifyDataForModel(df: pd.DataFrame,
     return df
 
 
-def runKmeans(df: pd.DataFrame, YEARS: list, INCLUDE_POS, THREE_POS_FLAG,
-              APPLY_PCA: bool, VARIANCE: float, num_clusters: int, inertia: []):
-    print("---- Start kMeans Clustering model ----")
-    mod_data = modifyDataForModel(df, INCLUDE_POS, THREE_POS_FLAG)
-    X = common.normalizeData(mod_data.to_numpy())
-
-    if APPLY_PCA:
-        common.createElbowPlots(len(mod_data.columns), X, YEARS)
-        X = common.pcaTransform(X, VARIANCE)
-
-    print("** Data for Model Modification: COMPLETE")
-
-    # if num_clusters =
-    # num_clusters = len(df['Pos'].unique())
-    kmeans = KMeans(n_clusters=num_clusters,
-                    init='k-means++',
-                    max_iter=300,
-                    n_init=10,
-                    random_state=0)
-    pred_y = kmeans.fit_predict(X)
-
-    # print(X[:,0])
-    inertia.append(kmeans.inertia_)
-    print("Inertia:\t")
-    print(kmeans.inertia_)
-
-    print("Clusters (result of k-means)")
-    print(collections.Counter(pred_y))
-
-    print("Ground truth")
-    print(collections.Counter(df['Pos']))
-    plt.figure(figsize=(10, 6))
-    plt.scatter(df['Pos'], X[:, 1])
-    plt.scatter(kmeans.cluster_centers_[:, 0],
-                kmeans.cluster_centers_[:, 1],
-                s=300,
-                c='red')
-    # plt.show()
-
-    print(df['Pos'].unique())
-
-    # Ensure that all labels are corrected to be in range [0, 4]
-    df.loc[:, 'Cluster'] = pred_y
-
-    common.calcPositionConc(df, "kMeans", YEARS, THREE_POS_FLAG)
-
-    return common.reportClusterScores(df, YEARS, INCLUDE_POS)
-
-
-def plotInertia(inertia: []):
+def plotInertia(inertia: [], years: list):
     fig = go.Figure(data=go.Scatter(x=np.arange(1, 11), y=inertia))
-    fig.update_layout(title="Inertia vs Cluster Number", xaxis=dict(range=[0, 11], title="Cluster Number"),
+    fig.update_layout(title=f"Inertia vs Cluster Number {years[0]} to {years[1]}", xaxis=dict(range=[0, 11], title="Cluster Number"),
                       yaxis={'title': 'Inertia'},
                       annotations=[
                           dict(
@@ -108,3 +59,54 @@ def plotInertia(inertia: []):
                           )
                       ])
     fig.show()
+
+
+def runKmeans(df: pd.DataFrame, YEARS: list, INCLUDE_POS, THREE_POS_FLAG,
+              APPLY_PCA: bool, VARIANCE: float):
+    print("---- Start kMeans Clustering model ----")
+    mod_data = modifyDataForModel(df, INCLUDE_POS, THREE_POS_FLAG)
+    X = common.normalizeData(mod_data.to_numpy())
+
+    if APPLY_PCA:
+        common.createElbowPlots(len(mod_data.columns), X, YEARS)
+        X = common.pcaTransform(X, VARIANCE)
+
+    print("** Data for Model Modification: COMPLETE")
+
+    inertia = []
+    for i in range(1, 11):
+        print(f"** Model3 (KMeans): RUN kMeans with {i} clusters \n")
+        kmeans = KMeans(n_clusters=i,
+                        init='k-means++',
+                        max_iter=300,
+                        n_init=10,
+                        random_state=0)
+        pred_y = kmeans.fit_predict(X)
+
+        inertia.append(kmeans.inertia_)
+        df.loc[:, f'Cluster{i}'] = pred_y
+
+        print("Inertia:\t")
+        print(kmeans.inertia_)
+
+        print("Clusters (result of k-means)")
+        print(collections.Counter(pred_y))
+
+        print("Ground truth")
+        print(collections.Counter(df['Pos']))
+        plt.figure(figsize=(10, 6))
+        plt.scatter(df['Pos'], X[:, 1])
+        plt.scatter(kmeans.cluster_centers_[:, 0],
+                    kmeans.cluster_centers_[:, 1],
+                    s=300,
+                    c='red')
+        #plt.show()
+
+    plotInertia(inertia, YEARS)
+
+    # Ensure that all labels are corrected to be in range [0, 4]
+    df.loc[:, 'Cluster'] = df['Cluster5']
+
+    common.calcPositionConc(df, "kMeans", YEARS, THREE_POS_FLAG)
+
+    return common.reportClusterScores(df, YEARS, INCLUDE_POS)
