@@ -29,6 +29,7 @@ import kMeans as kMeans
 from pca import runPCA
 from som import som
 import pandas as pd
+import lib.modelCommon as common
 
 ##########################
 ################
@@ -104,6 +105,8 @@ YEARS = [[1971, 1980],
 
 if DEBUG:
     YEARS = [YEARS[0], YEARS[1]]
+
+#common.calcEntropy()
 
 ##########################
 ################

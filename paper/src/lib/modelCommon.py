@@ -248,3 +248,43 @@ def combinePlayers():
     df_p1.to_csv('../data/input/Players_1950_2022.csv')
 
 
+def calcEntropy():
+
+    import scipy.stats as sci
+
+    modelList = ['Hierarchy', 'kMeans', 'SOM']
+    YEAR_PAIRS = [[1971, 1980],
+                     [1981, 1990],
+                     [1991, 2000],
+                     [2001, 2010],
+                     [2011, 2020]]
+
+    #writer = pd.ExcelWriter('Entropy2.xlsx', engine='xlsxwriter')
+    df_Entropy = pd.DataFrame(columns=modelList)
+
+    for model in modelList:
+        for YEARS in YEAR_PAIRS:
+            df = pd.read_csv("CONC_{}_Season_Stats_{}-{}.csv".format(model,
+                                                                     YEARS[0],
+                                                                     YEARS[1]),
+                             index_col=0)
+            df = df.drop(columns='Total')
+
+
+            # loop through all clusters. Get average entropy of the clusters
+            entropyAvg = []
+            for row in range(len(df)):
+                array = df.iloc[row, :5].to_numpy()
+
+                entropyAvg.append(sci.entropy(array))
+
+            #df_Entropy.loc[YEARS[1], model] = sum(entropyAvg)/len(entropyAvg)
+            df_Entropy.loc["{}s".format(YEARS[0]-1), model] = \
+                round(sum(entropyAvg) / len(entropyAvg), 3)
+            df_Entropy.loc["{}s".format(YEARS[0] - 1),
+                           "{}-Range".format(model)] =  \
+                round(max(entropyAvg) - min(entropyAvg), 3)
+
+
+    df_Entropy.to_excel('Entropy-ClusterAvgs.xlsx')
+
