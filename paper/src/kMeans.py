@@ -44,16 +44,16 @@ def modifyDataForModel(df: pd.DataFrame,
 
 def runKmeans(df: pd.DataFrame, YEARS: list, INCLUDE_POS, THREE_POS_FLAG, APPLY_PCA: bool = False, VARIANCE: int = 5):
 
-    print(df.head())
+    #print(df.head())
     mod_data = modifyDataForModel(df, INCLUDE_POS, THREE_POS_FLAG)
 
-    print(mod_data.head())
+    #print(mod_data.head())
     scaler = StandardScaler()
     X = scaler.fit_transform(mod_data)
 
     num_clusters = len(df['Pos'].unique())
 
-    print(pd.DataFrame(X).head())
+    #print(pd.DataFrame(X).head())
     kmeans = KMeans(n_clusters=num_clusters,
                     init='k-means++',
                     max_iter=300,
@@ -61,7 +61,7 @@ def runKmeans(df: pd.DataFrame, YEARS: list, INCLUDE_POS, THREE_POS_FLAG, APPLY_
                     random_state=0)
     pred_y = kmeans.fit_predict(X)
 
-    print(X[:,0])
+    #print(X[:,0])
     print("Inertia:\t")
     print(kmeans.inertia_)
     labels = kmeans.predict(X)
@@ -74,7 +74,7 @@ def runKmeans(df: pd.DataFrame, YEARS: list, INCLUDE_POS, THREE_POS_FLAG, APPLY_
     plt.figure(figsize=(10, 6))
     plt.scatter(df['Pos'], X[:,1])
     plt.scatter(kmeans.cluster_centers_[:, 0], kmeans.cluster_centers_[:, 1], s=300, c='red')
-    #plt.show()
+    plt.show()
 
     # Ensure that all labels are corrected to be in range [0, 4]
     df.loc[:, 'Cluster'] = pred_y
