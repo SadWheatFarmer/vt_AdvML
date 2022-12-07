@@ -42,13 +42,13 @@ def modifyDataForModel(df: pd.DataFrame,
 
 
 def plotInertia(inertia: [], years: list):
-    fig = go.Figure(data=go.Scatter(x=np.arange(1, 11), y=inertia))
-    fig.update_layout(title=f"Inertia vs Cluster Number {years[0]} to {years[1]}", xaxis=dict(range=[0, 11], title="Cluster Number"),
+    fig = go.Figure(data=go.Scatter(x=np.arange(1, 50), y=inertia))
+    fig.update_layout(title=f"Inertia vs Cluster Number {years[0]} to {years[1]}", xaxis=dict(range=[0, 50], title="Cluster Number"),
                       yaxis={'title': 'Inertia'},
                       annotations=[
                           dict(
-                              x=3,
-                              y=inertia[2],
+                              x=4,
+                              y=inertia[3],
                               xref="x",
                               yref="y",
                               text="Elbow!",
@@ -74,7 +74,7 @@ def runKmeans(df: pd.DataFrame, YEARS: list, INCLUDE_POS, THREE_POS_FLAG,
     print("** Data for Model Modification: COMPLETE")
 
     inertia = []
-    for i in range(1, 11):
+    for i in range(1, 50):
         print(f"** Model3 (KMeans): RUN kMeans with {i} clusters \n")
         kmeans = KMeans(n_clusters=i,
                         init='k-means++',
@@ -100,7 +100,7 @@ def runKmeans(df: pd.DataFrame, YEARS: list, INCLUDE_POS, THREE_POS_FLAG,
                     kmeans.cluster_centers_[:, 1],
                     s=300,
                     c='red')
-        #plt.show()
+        plt.show()
 
     plotInertia(inertia, YEARS)
 

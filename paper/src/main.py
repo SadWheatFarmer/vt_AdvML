@@ -84,7 +84,7 @@ OUTPUT_FILES_FLAG = True
 HIERARCHICAL = True
 SOM = True
 KMEANS = True
-PCA_kMEANS = False
+PCA_kMEANS = True
 
 PCA = True
 VARIANCE_THRESHOLD = 0.85
@@ -106,7 +106,7 @@ YEARS = [[1971, 1980],
 if DEBUG:
     YEARS = [YEARS[0], YEARS[1]]
 
-#common.calcEntropy()
+# common.calcEntropy()
 
 ##########################
 ################
@@ -157,15 +157,15 @@ for YEAR in YEARS:
     if KMEANS:
         metrics = kMeans.runKmeans(df_year, [YEAR[0], YEAR[1]],
                                    INCLUDE_POS, THREE_POSITION_FLAG,
-                                   PCA, VARIANCE_THRESHOLD)
+                                   False, VARIANCE_THRESHOLD)
         df_metrics_kMeans.loc[len(df_metrics_kMeans)] = metrics
 
         print("** Model3 (KMeans): COMPLETE\n")
 
     if PCA_kMEANS:
-        metrics = runPCA(df_year, [YEAR[0], YEAR[1]],
-                         INCLUDE_POS, THREE_POSITION_FLAG,
-                         VARIANCE_THRESHOLD)
+        metrics = kMeans.runKmeans(df_year, [YEAR[0], YEAR[1]],
+                                   INCLUDE_POS, THREE_POSITION_FLAG, True,
+                                   VARIANCE_THRESHOLD)
         df_metrics_kMeans_pca.loc[len(df_metrics_kMeans_pca)] = metrics
         print("** Model4 (PCA KMeans): COMPLETE\n")
 

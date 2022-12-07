@@ -14,8 +14,10 @@
 import matplotlib.pyplot as plt
 import pandas as pd
 import scipy.cluster.hierarchy as shc
+import numpy as np
 
 import lib.modelCommon as common
+from sklearn.cluster import AgglomerativeClustering
 
 def modifyDataForModel(df: pd.DataFrame,
                        INCLUDE_POS_FLAG, THREE_POS_FLAG) -> pd.DataFrame:
@@ -50,6 +52,26 @@ def hierarchicalClustering(df: pd.DataFrame, YEARS: list,
 
     print("** Data for Model Modification: COMPLETE")
 
+    # Initialize hiererchial clustering method, in order for the algorithm to determine the number of clusters
+    # put n_clusters=None, compute_full_tree = True,
+    # best distance threshold value for this dataset is distance_threshold = 200
+    cluster = AgglomerativeClustering(n_clusters=None, affinity='euclidean', linkage='ward', compute_full_tree=True,
+                                      distance_threshold=200)
+
+    # Cluster the data
+    cluster.fit_predict(x)
+
+    print(f"Number of clusters = {1 + np.amax(cluster.labels_)}")
+
+    # Display the clustering, assigning cluster label to every datapoint
+    print("Classifying the points into clusters:")
+    print(cluster.labels_)
+
+    # Display the clustering graphically in a plot
+    plt.scatter(x[:, 0], x[:, 1], c=cluster.labels_, cmap='rainbow')
+    plt.title(f"SK Learn estimated number of clusters = {1 + np.amax(cluster.labels_)}")
+    plt.show()
+
     # see documentation for different cluster methodologies
     # { single, complete, average, weighted, centroid, median, ward }
     # https://docs.scipy.org/doc/scipy/reference/generated/scipy.cluster.hierarchy.linkage.html
@@ -72,6 +94,7 @@ def hierarchicalClustering(df: pd.DataFrame, YEARS: list,
     labels = shc.fcluster(Z,
                           criterion='maxclust',
                           t=numClusters)
+
 
     # Ensure that all labels are corrected to be in range [0, 4]
     df.loc[:, 'Cluster'] = labels - 1
