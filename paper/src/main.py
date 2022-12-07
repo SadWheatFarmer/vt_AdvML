@@ -25,7 +25,7 @@ Output:
 
 import dataPreparation as dp
 import hierarchyClustering as hc
-from kMeans import runKmeans
+import kMeans as kMeans
 from pca import runPCA
 from som import som
 import pandas as pd
@@ -129,6 +129,7 @@ df_metrics_hierarchy = pd.DataFrame(columns=['Years', 'CHS', 'SC', 'DBI'])
 df_metrics_som = pd.DataFrame(columns=['Years', 'CHS', 'SC', 'DBI'])
 df_metrics_kMeans = pd.DataFrame(columns=['Years', 'CHS', 'SC', 'DBI'])
 df_metrics_kMeans_pca = pd.DataFrame(columns=['Years', 'CHS', 'SC', 'DBI'])
+kmeans_inertia = []
 
 # Begin modeling for each set of year-pairs specified.
 for YEAR in YEARS:
@@ -151,10 +152,13 @@ for YEAR in YEARS:
         print("** Model2 (SOM Clustering): COMPLETE\n")
 
     if KMEANS:
-        metrics = runKmeans(df_year, [YEAR[0], YEAR[1]],
-                            INCLUDE_POS, THREE_POSITION_FLAG,
-                            PCA, VARIANCE_THRESHOLD)
-        df_metrics_kMeans.loc[len(df_metrics_kMeans)] = metrics
+        for i in range(1, 11):
+            print(f"** Model3 (KMeans): RUN kMeans with {i} clusters \n")
+            metrics = kMeans.runKmeans(df_year, [YEAR[0], YEAR[1]],
+                                       INCLUDE_POS, THREE_POSITION_FLAG,
+                                       PCA, VARIANCE_THRESHOLD, i, kmeans_inertia)
+            df_metrics_kMeans.loc[len(df_metrics_kMeans)] = metrics
+
         print("** Model3 (KMeans): COMPLETE\n")
 
     if PCA_kMEANS:

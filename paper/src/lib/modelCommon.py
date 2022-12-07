@@ -19,6 +19,8 @@ import numpy as np
 from sklearn.metrics import calinski_harabasz_score as C_H_score
 from sklearn.metrics import silhouette_score as S_score
 from sklearn.metrics import davies_bouldin_score as D_B_score
+from sklearn.preprocessing import MinMaxScaler
+
 
 def normalizeData(np_array):
     scaler = StandardScaler()
@@ -46,7 +48,7 @@ def createElbowPlots(numFeatures: int, X, YEARS: list):
 
 def pcaTransform(df: pd.DataFrame, VARIANCE: int) -> pd.DataFrame:
     print("*** Apply PCA: Data Reduction")
-    scaler = StandardScaler()
+    scaler = MinMaxScaler()
     X = scaler.fit_transform(df)
 
     # Perform PCA on transformed dataset by using components with a

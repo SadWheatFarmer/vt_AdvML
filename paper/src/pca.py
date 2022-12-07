@@ -13,6 +13,7 @@ import lib.modelCommon as common
 import matplotlib.pyplot as plt
 from sklearn.cluster import KMeans
 from sklearn.preprocessing import StandardScaler
+from sklearn.preprocessing import MinMaxScaler
 
 
 
@@ -40,7 +41,7 @@ def runPCA(df: pd.DataFrame, YEARS: list, INCLUDE_POS, THREE_POS_FLAG,
 
     mod_data = modifydataformodel(df, INCLUDE_POS, THREE_POS_FLAG)
 
-    scaler = StandardScaler()
+    scaler = MinMaxScaler()
     X = scaler.fit_transform(mod_data)
 
     # Identify optimal PCA components through Elbow Plots beforehand.
