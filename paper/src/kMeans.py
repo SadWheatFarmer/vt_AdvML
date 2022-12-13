@@ -19,7 +19,7 @@ import seaborn
 from sklearn.cluster import KMeans
 from sklearn.preprocessing import StandardScaler
 import collections
-import plotly.graph_objects as go
+#import plotly.graph_objects as go
 
 
 def modifyDataForModel(df: pd.DataFrame,
@@ -74,7 +74,7 @@ def runKmeans(df: pd.DataFrame, YEARS: list, INCLUDE_POS, THREE_POS_FLAG,
     print("** Data for Model Modification: COMPLETE")
 
     inertia = []
-    for i in range(1, 50):
+    for i in range(5, 6):
         print(f"** Model3 (KMeans): RUN kMeans with {i} clusters \n")
         kmeans = KMeans(n_clusters=i,
                         init='k-means++',
@@ -102,7 +102,7 @@ def runKmeans(df: pd.DataFrame, YEARS: list, INCLUDE_POS, THREE_POS_FLAG,
                     c='red')
         plt.show()
 
-    plotInertia(inertia, YEARS)
+    #plotInertia(inertia, YEARS)
 
     # Ensure that all labels are corrected to be in range [0, 4]
     df.loc[:, 'Cluster'] = df['Cluster5']

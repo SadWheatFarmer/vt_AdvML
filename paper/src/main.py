@@ -75,7 +75,7 @@ REG_MIN - Numeric. Filter to remove players that don't play enough
                'minutes per game' in a season.
 '''
 DEBUG = False
-LOAD_MODEL_DATA = True
+LOAD_MODEL_DATA = False
 
 PLAYER_PATH = "../data/input/Players.csv"
 DATA_PATH = "../data/input/Seasons_Stats_1950_2022.csv"  # 1950-2022
@@ -163,8 +163,8 @@ for YEAR in YEARS:
         print("** Model3 (KMeans): COMPLETE\n")
 
     if PCA_kMEANS:
-        metrics = kMeans.runKmeans(df_year, [YEAR[0], YEAR[1]],
-                                   INCLUDE_POS, THREE_POSITION_FLAG, True,
+        metrics = runPCA(df_year, [YEAR[0], YEAR[1]],
+                                   INCLUDE_POS, THREE_POSITION_FLAG,
                                    VARIANCE_THRESHOLD)
         df_metrics_kMeans_pca.loc[len(df_metrics_kMeans_pca)] = metrics
         print("** Model4 (PCA KMeans): COMPLETE\n")

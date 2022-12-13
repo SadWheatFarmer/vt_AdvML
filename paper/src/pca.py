@@ -71,7 +71,10 @@ def runPCA(df: pd.DataFrame, YEARS: list, INCLUDE_POS, THREE_POS_FLAG,
                       label=target_name
         )
     plt.legend(loc="best", shadow=False, scatterpoints=1)
-    plt.title("PCA of NBA dataset")
+    plt.xlabel("PCA Component 1")
+    plt.ylabel("PCA Component 2")
+    plt.title("NBA Positions after PCA - {}-{}".format(YEARS[0],
+                YEARS[1]))
     plt.savefig("../model/SCATTER_{}_Season_Stats_{}-{}".format(
                 "PCA",
                 YEARS[0],
