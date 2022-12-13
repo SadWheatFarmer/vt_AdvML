@@ -23,7 +23,7 @@ from sklearn.preprocessing import MinMaxScaler
 
 
 def normalizeData(np_array):
-    scaler = StandardScaler()
+    scaler = MinMaxScaler()
     x_scaled = scaler.fit_transform(np_array.tolist())
 
     x_normalized = normalize(x_scaled)
@@ -48,8 +48,7 @@ def createElbowPlots(numFeatures: int, X, YEARS: list):
 
 def pcaTransform(df: pd.DataFrame, VARIANCE: int) -> pd.DataFrame:
     print("*** Apply PCA: Data Reduction")
-    scaler = MinMaxScaler()
-    X = scaler.fit_transform(df)
+    X = df
 
     # Perform PCA on transformed dataset by using components with a
     # percentage of the explained dataset variance.
