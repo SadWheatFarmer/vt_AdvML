@@ -1,7 +1,11 @@
 # vt_AdvML
- Git repository for homework, projects, and class examples for the ECE5424 Advanced ML course taken at Virginia Tech University instructed by Dr Yue Wang (Joseph). August 2022 to December 2022.  
- 
- Topics Discussed
+ Git repository for the projects and class examples for the ECE5424 Advanced ML course taken at Virginia Tech University instructed by Dr Yue Wang (Joseph). August 2022 to December 2022.  
+
+##Project
+Trends of Positionless Basketball in the NBA from 1970 to 2020.
+
+
+##Topics Discussed
  
 supervised  learning  principles, 
 classification  and  prediction, 
@@ -31,7 +35,7 @@ bootstrapping and ML uncertainty;
 with applications  on  the  boundaries  between  machine  learning  and  data  sciences.
  
  
- Textbook Resources  
+ ##Textbook Resources  
  - Pattern Classification by Richard O. Duda, Peter E. Hart, and David G. Stork
  - Independent Component Analysis by Aapo Hyvarinen, Juha Karhunen, and Erkki Oja
  - Neural networks and Learning Machines by Simon Haykin
